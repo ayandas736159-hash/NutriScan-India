@@ -1,5 +1,5 @@
 {
-  "name": "NutriScan India - Bengali & Indian Food Calorie Counter",
+  "name": "NutryScan India - Bengali & Indian Food Calorie Counter",
   "description": "An AI-powered nutrition assistant specialized in Indian and Bengali household cuisine. Upload a photo of your meal to get instant calorie counts and nutritional breakdowns.",
   "requestFramePermissions": [
     "camera"

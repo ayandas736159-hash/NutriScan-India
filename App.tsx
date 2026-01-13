@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import Layout from './components/Layout';
 import Scanner from './components/Scanner';
@@ -24,7 +23,7 @@ const App: React.FC = () => {
       setStatus(AppStatus.SUCCESS);
     } catch (err: any) {
       console.error("Analysis failed:", err);
-      setError(err.message || "Failed to analyze meal. Please try again.");
+      setError(err.message || "Something went wrong. Let's try scanning again.");
       setStatus(AppStatus.ERROR);
     }
   }, [language]);
@@ -38,41 +37,91 @@ const App: React.FC = () => {
 
   const translations = {
     en: {
-      title: "Stop guessing. Know exactly what you eat.",
-      subtitle: "Namaste! Welcome to GovGuide India's specialized Nutrition wing. Get verified checklists for your Bengali and Indian household meals.",
-      loading: "AI Scanning in Progress...",
-      loadingSub: "Checking your meal against 10,000+ Indian food variants.",
-      audit: "Running Nutritional Audit"
+      title: "Homemade ≠ Healthy.",
+      subtitle: "Most Indian home meals are 'Carb Bombs' hidden in plain sight. Using ICMR guidelines, we reveal the hidden math of your plate.",
+      stat1: "1 in 4",
+      stat1Sub: "Adults in India are at risk of lifestyle diseases (NFHS-5)",
+      stat2: "70%",
+      stat2Sub: "Average Indian diet consists of refined carbs (ICMR)",
+      stat3: "120kcal",
+      stat3Sub: "Hidden calories in just 1 tbsp of Mustard Oil",
+      loading: "Scanning Your Plate...",
+      loadingSub: "Calculating oil soak and the carb-to-protein balance.",
+      audit: "Real Meal Scan",
+      trapsTitle: "Why Use NutryScan?",
+      trap1: "The Oil Soak",
+      trap1Sub: "'Bhaja' can absorb 3+ spoons of oil, adding 400 calories silently.",
+      trap2: "The Rice Rush",
+      trap2Sub: "Excess rice-to-protein ratio causes energy crashes and fat storage.",
+      trap3: "Protein Gap",
+      trap3Sub: "80% of Indian diets lack essential protein levels.",
+      errorTitle: "Analysis Interrupted",
+      errorMessage: "Something went wrong. Please try scanning again.",
+      retryButton: "RETRY SCAN"
     },
     bn: {
-      title: "অন্দাজ বন্ধ করুন। আপনি কি খাচ্ছেন তা সঠিকভাবে জানুন।",
-      subtitle: "নমস্কার! GovGuide India-র বিশেষ পুষ্টি বিভাগে আপনাকে স্বাগতম। আপনার বাঙালি ও ভারতীয় খাবারের জন্য যাচাইকৃত তালিকা পান।",
-      loading: "AI স্ক্যানিং চলছে...",
-      loadingSub: "১০,০০০+ ভারতীয় খাবারের সাথে আপনার খাবার যাচাই করা হচ্ছে।",
-      audit: "পুষ্টি অডিট চলছে"
+      title: "বাড়ির খাবার মানেই কি ভালো?",
+      subtitle: "আমাদের থালিতে প্রায়ই প্রয়োজনের চেয়ে অনেক বেশি কার্বোহাইড্রেট এবং তেল থাকে। ICMR-এর নির্দেশিকা মেনে আপনার খাবারের একটি Honest Check নিন।",
+      stat1: "৪ জনে ১ জন",
+      stat1Sub: "ভারতীয় প্রাপ্তবয়স্ক এখন স্থূলতা বা মেদজনিত সমস্যায় আক্রান্ত (NFHS-5)",
+      stat2: "৭০%",
+      stat2Sub: "গড় ভারতীয় ডায়েটে অতিরিক্ত কার্বোহাইড্রেট থাকে (ICMR)",
+      stat3: "১২০ kcal",
+      stat3Sub: "মাত্র ১ চামচ সরষের তেলে লুকানো ক্যালরি",
+      loading: "প্লেট স্ক্যান করা হচ্ছে...",
+      loadingSub: "তেলের পরিমাণ এবং কার্ব-প্রোটিন অনুপাত সঠিক ভাবে দেখা হচ্ছে।",
+      audit: "Real Meal স্ক্যান",
+      trapsTitle: "কেন NutryScan ব্যবহার করবেন?",
+      trap1: "তেল সোক",
+      trap1Sub: "যেকোনো 'ভাজা' ৩ চামচের বেশি তেল শুষে নিতে পারে, যা ওজন বাড়ায়।",
+      trap2: "ভাতের আধিক্য",
+      trap2Sub: "প্রোটিনের তুলনায় ভাতের পরিমাণ বেশি হলে শরীরে ক্লান্তি আসে।",
+      trap3: "প্রোটিন অভাব",
+      trap3Sub: "প্রায় ৮০% ভারতীয়র খাবারে সঠিক প্রোটিনের অভাব রয়েছে।",
+      errorTitle: "বিশ্লেষণ বাধাপ্রাপ্ত",
+      errorMessage: "কিছু ভুল হয়েছে। অনুগ্রহ করে আবার স্ক্যান করার চেষ্টা করুন।",
+      retryButton: "পুনরায় স্ক্যান করুন"
     },
     hi: {
-      title: "अनुमान लगाना बंद करें। जानें कि आप क्या खा रहे हैं।",
-      subtitle: "नमस्ते! GovGuide India के विशेष पोषण विंग में आपका स्वागत है। अपने बंगाली और भारतीय भोजन के लिए सत्यापित चेकलिस्ट प्राप्त करें।",
-      loading: "AI स्कैनिंग जारी है...",
-      loadingSub: "10,000+ भारतीय खाद्य पदार्थों के साथ आपके भोजन की जाँच की जा रही है।",
-      audit: "पोषण ऑडिट चल रहा है"
+      title: "घर का खाना ≠ हेल्दी।",
+      subtitle: "हमारी थालियों में अक्सर जरूरत से ज्यादा कार्ब्स और तेल होता है। ICMR के नियमों के अनुसार अपने भोजन का Honest Check प्राप्त करें।",
+      stat1: "4 में से 1",
+      stat1Sub: "भारतीय वयस्क अब जीवनशैली रोगों के खतरे में हैं (NFHS-5)",
+      stat2: "70%",
+      stat2Sub: "औसत भारतीय आहार में केवल रिफाइंड कार्ब्स होते हैं (ICMR)",
+      stat3: "120kcal",
+      stat3Sub: "केवल 1 चम्मच सरसों के तेल में छिपी कैलोरी",
+      loading: "थाली स्कैन हो रही है...",
+      loadingSub: "तेल और कार्ब-प्रोटीन के संतुलन की पहचान की जा रही है।",
+      audit: "Real Meal स्कैन",
+      trapsTitle: "NutryScan क्यों?",
+      trap1: "ऑयल सोक",
+      trap1Sub: "'भुना' हुआ खाना 3+ चम्मच तेल सोख सकता है, जो वजन बढ़ाता है।",
+      trap2: "चावल का रश",
+      trap2Sub: "चावल की अधिक मात्रा से शुगर और सुस्ती बढ़ती है।",
+      trap3: "प्रोटीन गैप",
+      trap3Sub: "80% भारतीयों के भोजन में पर्याप्त प्रोटीन नहीं होता।",
+      errorTitle: "विश्लेषण बाधित",
+      errorMessage: "कुछ गलत हो गया। कृपया फिर से स्कैन करने का प्रयास करें।",
+      retryButton: "पुनः स्कैन करें"
     }
   };
 
   const t = translations[language];
 
   return (
-    <Layout>
-      <div className="max-w-3xl mx-auto">
+    <Layout onLogoClick={reset}>
+      <div className="max-w-6xl mx-auto">
         {/* Language Switcher */}
-        <div className="flex justify-center mb-8 gap-2">
+        <div className="flex justify-center mb-10 gap-2 no-print">
           {(['en', 'bn', 'hi'] as Language[]).map((l) => (
             <button
               key={l}
               onClick={() => setLanguage(l)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                language === l ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+              className={`px-5 py-2 rounded-2xl text-xs font-bold transition-all transform active:scale-95 ${
+                language === l 
+                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-200 dark:shadow-none' 
+                  : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : 'हिन्दी'}
@@ -81,63 +130,104 @@ const App: React.FC = () => {
         </div>
 
         {status === AppStatus.IDLE && (
-          <div className="animate-in fade-in slide-in-from-top-4 duration-700">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-                {t.title.split('. ').map((line, i) => (
-                  <React.Fragment key={i}>
-                    {i === 1 ? <span className="text-orange-600 underline decoration-orange-200 underline-offset-8">{line}</span> : line}
-                    {i === 0 && <br/>}
-                  </React.Fragment>
-                ))}
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-12">
+            {/* Attractive Hero Section */}
+            <div className="text-center">
+              <span className="inline-block px-4 py-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6 border border-orange-200 dark:border-orange-800">
+                Scientifically Driven Nutrition
+              </span>
+              <h2 className="text-5xl sm:text-7xl font-black text-slate-900 dark:text-white mb-6 leading-[1.1] tracking-tighter">
+                {t.title} <span className="text-orange-600 italic block">Reveal the Truth.</span>
               </h2>
-              <p className="text-lg text-slate-600 max-w-xl mx-auto">
+              <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
                 {t.subtitle}
               </p>
             </div>
+
+            {/* Research Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { val: t.stat1, sub: t.stat1Sub, icon: "🚨", color: "from-blue-500 to-blue-600", baseColor: "blue" },
+                { val: t.stat2, sub: t.stat2Sub, icon: "🍚", color: "from-orange-500 to-orange-600", baseColor: "orange" },
+                { val: t.stat3, sub: t.stat3Sub, icon: "🛢️", color: "from-red-500 to-red-600", baseColor: "red" }
+              ].map((stat, i) => (
+                <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group flex flex-col items-center transition-colors">
+                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-5 blur-2xl group-hover:opacity-10 transition-opacity`}></div>
+                  
+                  {/* New styled icon container */}
+                  <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 
+                                   bg-${stat.baseColor}-100 dark:bg-${stat.baseColor}-900/30 text-slate-900 dark:text-white
+                                   text-4xl shadow-md dark:shadow-none transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                    {stat.icon}
+                  </div>
+                  
+                  <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-2">{stat.val}</h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-bold leading-relaxed">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
+            
             <Scanner onImageCaptured={handleImageCaptured} isLoading={false} language={language} />
             
-            <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                  <span className="text-xl">🥛</span>
+            {/* Truth Traps Section */}
+            <div className="bg-slate-900 dark:bg-black rounded-[3.5rem] p-12 text-white shadow-2xl relative overflow-hidden border-b-[16px] border-orange-600">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-orange-600 opacity-5 blur-[120px] rounded-full"></div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black mb-12 flex items-center justify-center text-center">
+                  <span className="w-12 h-px bg-slate-800 mr-6"></span>
+                  {t.trapsTitle}
+                  <span className="w-12 h-px bg-slate-800 ml-6"></span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                  <div className="text-center group">
+                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform group-hover:rotate-6">
+                      <span className="text-3xl">🍳</span>
+                    </div>
+                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap1}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap1Sub}</p>
+                  </div>
+                  <div className="text-center group border-y md:border-y-0 md:border-x border-slate-800 py-10 md:py-0 md:px-6">
+                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform group-hover:-rotate-6">
+                      <span className="text-3xl">🥘</span>
+                    </div>
+                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap2}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap2Sub}</p>
+                  </div>
+                  <div className="text-center group">
+                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform group-hover:scale-110">
+                      <span className="text-3xl">🥗</span>
+                    </div>
+                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap3}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap3Sub}</p>
+                  </div>
                 </div>
-                <h3 className="font-bold text-slate-800 mb-2">Macro Audit</h3>
-                <p className="text-sm text-slate-500">Precise detection of Carbs, Proteins, and Fats in traditional curries.</p>
-              </div>
-              <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                  <span className="text-xl">⚖️</span>
-                </div>
-                <h3 className="font-bold text-slate-800 mb-2">Zero-Error Estimation</h3>
-                <p className="text-sm text-slate-500">Specialized logic for Bengali household portion sizes and oil usage.</p>
               </div>
             </div>
           </div>
         )}
 
         {status === AppStatus.LOADING && (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-8 animate-in fade-in duration-500">
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-10 animate-in fade-in duration-500">
             <div className="relative">
-              <div className="w-32 h-32 border-8 border-slate-100 border-t-orange-600 rounded-full animate-spin"></div>
+              <div className="w-40 h-40 border-[12px] border-slate-100 dark:border-slate-800 border-t-orange-600 rounded-full animate-spin"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl">🔍</span>
+                <span className="text-5xl animate-bounce">🍲</span>
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{t.loading}</h2>
-              <p className="text-slate-500 mt-2">{t.loadingSub}</p>
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{t.loading}</h2>
+              <p className="text-slate-500 dark:text-slate-400 mt-3 font-bold text-lg">{t.loadingSub}</p>
             </div>
-            <div className="space-y-2 w-full max-w-xs">
-              <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-600 w-2/3 animate-[loading_2s_ease-in-out_infinite]"></div>
+            <div className="space-y-4 w-full max-w-sm">
+              <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                <div className="h-full bg-orange-600 w-2/3 animate-[loading_1.5s_ease-in-out_infinite]"></div>
               </div>
-              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{t.audit}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 uppercase font-black tracking-[0.3em]">{t.audit}</p>
             </div>
             <style>{`
               @keyframes loading {
                 0% { transform: translateX(-100%); }
-                100% { transform: translateX(200%); }
+                100% { transform: translateX(100%); }
               }
             `}</style>
           </div>
@@ -153,17 +243,14 @@ const App: React.FC = () => {
         )}
 
         {status === AppStatus.ERROR && (
-          <div className="bg-red-50 border-2 border-red-100 rounded-3xl p-10 text-center animate-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">❌</span>
+          <div className="bg-red-50 dark:bg-red-900/10 border-4 border-red-100 dark:border-red-900/30 rounded-[3rem] p-16 text-center animate-in zoom-in duration-300">
+            <div className="w-28 h-28 bg-red-100 dark:bg-red-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl shadow-red-200 dark:shadow-none">
+              <span className="text-6xl">🛑</span>
             </div>
-            <h2 className="text-2xl font-bold text-red-900 mb-2">Audit Failed</h2>
-            <p className="text-red-700 mb-8">{error}</p>
-            <button 
-              onClick={reset}
-              className="px-8 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors"
-            >
-              Try Again
+            <h2 className="text-4xl font-black text-red-900 dark:text-red-200 mb-4 tracking-tighter">{t.errorTitle}</h2>
+            <p className="text-red-700 dark:text-red-300 mb-12 text-xl font-medium max-w-md mx-auto">{t.errorMessage}</p>
+            <button onClick={reset} className="px-12 py-6 bg-red-600 hover:bg-red-700 text-white font-black rounded-[2rem] text-lg transition-all shadow-xl shadow-red-200 dark:shadow-red-900/40 transform active:scale-95">
+              {t.retryButton}
             </button>
           </div>
         )}
