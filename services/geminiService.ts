@@ -1,9 +1,12 @@
 
+/// <reference types="node" />
 import { GoogleGenAI, Type } from "@google/genai";
 import { NutritionAnalysis } from "../types";
 
+// Initialize the Google GenAI client using the API key from process.env.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Define the structured schema for nutrition analysis to ensure the model returns data in a predictable format.
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -20,7 +23,8 @@ const ANALYSIS_SCHEMA = {
           fats: { type: Type.NUMBER, description: "Fats in grams." },
           notes: { type: Type.STRING, description: "Specific details about ingredients detected (e.g., contains mustard oil)." }
         },
-        required: ["name", "portion", "calories", "protein", "carbs", "fats"]
+        // Include all mandatory fields to ensure strict adherence to the expected JSON structure.
+        required: ["name", "portion", "calories", "protein", "carbs", "fats", "notes"]
       }
     },
     totalCalories: { type: Type.NUMBER },
@@ -34,29 +38,28 @@ const ANALYSIS_SCHEMA = {
 };
 
 export const analyzeFoodImage = async (base64Image: string): Promise<NutritionAnalysis> => {
+  // Use gemini-3-flash-preview for efficient image-to-text nutritional auditing.
   const model = "gemini-3-flash-preview";
   
+  // Use the recommended contents structure with parts for a single-turn multimodal request.
   const response = await ai.models.generateContent({
     model,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `Analyze this photo of an Indian/Bengali meal. 
+    contents: {
+      parts: [
+        {
+          text: `Analyze this photo of an Indian/Bengali meal. 
             Identify all items (e.g., Rice, Dal, Bhaja, Macher Jhol, Luchi, Mishti, etc.). 
             Provide precise nutritional estimation based on standard Bengali household cooking styles.
             Return the result in JSON format.`
-          },
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Image
-            }
+        },
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: base64Image
           }
-        ]
-      }
-    ],
+        }
+      ]
+    },
     config: {
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA,
@@ -64,6 +67,7 @@ export const analyzeFoodImage = async (base64Image: string): Promise<NutritionAn
     }
   });
 
+  // The text property returns the generated string directly.
   const result = JSON.parse(response.text || "{}");
   return result as NutritionAnalysis;
 };
