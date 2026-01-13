@@ -1,12 +1,13 @@
 
 /// <reference types="node" />
 import { GoogleGenAI, Type } from "@google/genai";
-import { NutritionAnalysis } from "../types";
+import { NutritionAnalysis, Language } from "../types";
 
 // Initialize the Google GenAI client using the API key from process.env.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// In Vite, this is replaced at build time by the 'define' config.
+const apiKey = process.env.API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
-// Define the structured schema for nutrition analysis to ensure the model returns data in a predictable format.
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -15,42 +16,60 @@ const ANALYSIS_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Name of the food item (e.g., Luchi, Macher Jhol, Chholar Dal)." },
-          portion: { type: Type.STRING, description: "Estimated portion size (e.g., 2 pieces, 1 bowl)." },
-          calories: { type: Type.NUMBER, description: "Calories in kcal." },
-          protein: { type: Type.NUMBER, description: "Protein in grams." },
-          carbs: { type: Type.NUMBER, description: "Carbohydrates in grams." },
-          fats: { type: Type.NUMBER, description: "Fats in grams." },
-          notes: { type: Type.STRING, description: "Specific details about ingredients detected (e.g., contains mustard oil)." }
+          name: { type: Type.STRING, description: "Name of the food item." },
+          portion: { type: Type.STRING, description: "Estimated portion size." },
+          calories: { type: Type.NUMBER },
+          protein: { type: Type.NUMBER },
+          carbs: { type: Type.NUMBER },
+          fats: { type: Type.NUMBER },
+          notes: { type: Type.STRING, description: "Observations on cooking style or ingredients." },
+          status: { type: Type.STRING, enum: ["PASS", "FAIL", "WARNING"], description: "PASS for balanced, WARNING for high calorie/oil, FAIL for extremely unhealthy portions." }
         },
-        // Include all mandatory fields to ensure strict adherence to the expected JSON structure.
-        required: ["name", "portion", "calories", "protein", "carbs", "fats", "notes"]
+        required: ["name", "portion", "calories", "protein", "carbs", "fats", "notes", "status"]
       }
     },
     totalCalories: { type: Type.NUMBER },
     totalProtein: { type: Type.NUMBER },
     totalCarbs: { type: Type.NUMBER },
     totalFats: { type: Type.NUMBER },
-    healthRating: { type: Type.NUMBER, description: "A score from 1-10 on how balanced this meal is." },
-    advice: { type: Type.STRING, description: "A short, helpful tip for the user regarding this specific meal." }
+    healthRating: { type: Type.NUMBER },
+    advice: { type: Type.STRING }
   },
   required: ["items", "totalCalories", "totalProtein", "totalCarbs", "totalFats", "healthRating", "advice"]
 };
 
-export const analyzeFoodImage = async (base64Image: string): Promise<NutritionAnalysis> => {
-  // Use gemini-3-flash-preview for efficient image-to-text nutritional auditing.
+export const analyzeFoodImage = async (base64Image: string, lang: Language): Promise<NutritionAnalysis> => {
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please check your environment configuration.");
+  }
+
   const model = "gemini-3-flash-preview";
   
-  // Use the recommended contents structure with parts for a single-turn multimodal request.
+  const langContext = {
+    en: "English",
+    bn: "Bengali (বাংলা)",
+    hi: "Hindi (हिन्दी)"
+  };
+
   const response = await ai.models.generateContent({
     model,
     contents: {
       parts: [
         {
-          text: `Analyze this photo of an Indian/Bengali meal. 
-            Identify all items (e.g., Rice, Dal, Bhaja, Macher Jhol, Luchi, Mishti, etc.). 
-            Provide precise nutritional estimation based on standard Bengali household cooking styles.
-            Return the result in JSON format.`
+          text: `You are GovGuide India's Nutrition Auditor. 
+          Task: Perform a 'Zero-Error' nutritional audit of this Indian/Bengali meal.
+          
+          Language: Respond ONLY in ${langContext[lang]}.
+          
+          Guidelines:
+          1. Detect items like Luchi, Chholar Dal, Kosha Mangsho, Macher Jhol, etc.
+          2. Audit based on standard household cooking (e.g., use of mustard oil, ghee, sugar).
+          3. Verification Status Rules:
+             - PASS: High protein/fiber, low processed oil.
+             - WARNING: Deep fried (Luchi/Bhaja) or high carb (Large Rice portion).
+             - FAIL: Excessive sugar (Mishti) or oil-soaked items.
+          
+          Return JSON format adhering to the schema.`
         },
         {
           inlineData: {
@@ -67,7 +86,10 @@ export const analyzeFoodImage = async (base64Image: string): Promise<NutritionAn
     }
   });
 
-  // The text property returns the generated string directly.
-  const result = JSON.parse(response.text || "{}");
-  return result as NutritionAnalysis;
+  const text = response.text;
+  if (!text) {
+    throw new Error("Empty response from AI model.");
+  }
+
+  return JSON.parse(text) as NutritionAnalysis;
 };

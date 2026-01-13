@@ -1,4 +1,8 @@
 
+export type Language = 'en' | 'bn' | 'hi';
+
+export type VerificationStatus = 'PASS' | 'FAIL' | 'WARNING';
+
 export interface FoodItem {
   name: string;
   portion: string;
@@ -7,6 +11,7 @@ export interface FoodItem {
   carbs: number;
   fats: number;
   notes: string;
+  status: VerificationStatus;
 }
 
 export interface NutritionAnalysis {

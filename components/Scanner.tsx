@@ -1,12 +1,14 @@
 
 import React, { useRef, useState } from 'react';
+import { Language } from '../types';
 
 interface ScannerProps {
   onImageCaptured: (base64: string) => void;
   isLoading: boolean;
+  language: Language;
 }
 
-const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading }) => {
+const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading, language }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -28,24 +30,28 @@ const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading }) => {
     }
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+  const translations = {
+    en: {
+      snap: "Snap your meal",
+      sub: "Take a photo or upload an image of your Bengali/Indian thali to start the 'Zero-Error' audit.",
+      btn: "Open Camera / Gallery",
+      scanning: "AI is Scanning..."
+    },
+    bn: {
+      snap: "আপনার খাবারের ছবি নিন",
+      sub: "আপনার বাঙালি বা ভারতীয় থালির একটি ছবি নিন বা আপলোড করুন 'Zero-Error' অডিট শুরু করতে।",
+      btn: "ক্যামেরা / গ্যালারি খুলুন",
+      scanning: "AI স্ক্যান করছে..."
+    },
+    hi: {
+      snap: "अपने भोजन की फोटो लें",
+      sub: "अपने बंगाली/भारतीय थाली की फोटो लें या अपलोड करें और 'Zero-Error' ऑडिट शुरू करें।",
+      btn: "कैमरा / गैलरी खोलें",
+      scanning: "AI स्कैन कर रहा है..."
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
+  const t = translations[language];
 
   return (
     <div className="w-full">
@@ -53,10 +59,10 @@ const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading }) => {
         className={`relative border-2 border-dashed rounded-3xl p-12 text-center transition-all duration-300 ${
           dragActive ? 'border-orange-500 bg-orange-50 scale-[1.01]' : 'border-slate-300 bg-white hover:border-orange-400'
         }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
+        onDragEnter={(e) => {e.preventDefault(); setDragActive(true);}}
+        onDragLeave={() => setDragActive(false)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {e.preventDefault(); setDragActive(false); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);}}
       >
         <input 
           ref={fileInputRef}
@@ -75,9 +81,9 @@ const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading }) => {
             </svg>
           </div>
           
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Snap your meal</h2>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">{t.snap}</h2>
           <p className="text-slate-500 mb-8 max-w-xs mx-auto">
-            Take a photo or upload an image of your Bengali/Indian thali to start the "Zero-Error" audit.
+            {t.sub}
           </p>
 
           <button 
@@ -91,20 +97,13 @@ const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                AI is Scanning...
+                {t.scanning}
               </span>
             ) : (
-              "Open Camera / Gallery"
+              t.btn
             )}
           </button>
         </div>
-      </div>
-      
-      <div className="mt-8 flex flex-wrap justify-center gap-4 text-xs font-medium text-slate-400">
-        <span className="flex items-center px-3 py-1 bg-white rounded-full border border-slate-200">✅ Luchi & Alur Dom</span>
-        <span className="flex items-center px-3 py-1 bg-white rounded-full border border-slate-200">✅ Macher Jhol</span>
-        <span className="flex items-center px-3 py-1 bg-white rounded-full border border-slate-200">✅ Biryani & Chaap</span>
-        <span className="flex items-center px-3 py-1 bg-white rounded-full border border-slate-200">✅ Shukto</span>
       </div>
     </div>
   );
