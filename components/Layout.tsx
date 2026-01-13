@@ -70,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogoClick }) => {
       </main>
 
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 text-center text-slate-400 dark:text-slate-500 text-sm no-print transition-colors duration-300">
-        <p>© {new Date().getFullYear()} NutryScan India. Designed by Padmanava Das</p>
+        <p>© {new Date().getFullYear()} NutryScan India. Designed by <a href="https://www.linkedin.com/in/padmanavadas/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-600 transition-colors">Padmanava Das</a></p>
         <p className="mt-1 text-xs opacity-75">Helping families uncover real nutrition. AI estimates are not medical advice.</p>
       </footer>
     </div>
