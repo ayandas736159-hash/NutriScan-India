@@ -147,9 +147,9 @@ const App: React.FC = () => {
             {/* Research Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { val: t.stat1, sub: t.stat1Sub, icon: "🚨", color: "from-blue-500 to-blue-600", baseColor: "blue" },
-                { val: t.stat2, sub: t.stat2Sub, icon: "🍚", color: "from-orange-500 to-orange-600", baseColor: "orange" },
-                { val: t.stat3, sub: t.stat3Sub, icon: "🛢️", color: "from-red-500 to-red-600", baseColor: "red" }
+                { val: t.stat1, sub: t.stat1Sub, icon: "🩺", color: "from-blue-500 to-blue-600", baseColor: "blue" },
+                { val: t.stat2, sub: t.stat2Sub, icon: "🌾", color: "from-orange-500 to-orange-600", baseColor: "orange" },
+                { val: t.stat3, sub: t.stat3Sub, icon: "🔥", color: "from-red-500 to-red-600", baseColor: "red" }
               ].map((stat, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group flex flex-col items-center transition-colors">
                   <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-5 blur-2xl group-hover:opacity-10 transition-opacity`}></div>

@@ -3,14 +3,20 @@ export type Language = 'en' | 'bn' | 'hi';
 
 export type VerificationStatus = 'PASS' | 'FAIL' | 'WARNING';
 
+export interface LocalizedText {
+  en: string;
+  bn: string;
+  hi: string;
+}
+
 export interface FoodItem {
-  name: string;
-  portion: string;
+  name: LocalizedText;
+  portion: LocalizedText;
   calories: number;
   protein: number;
   carbs: number;
   fats: number;
-  notes: string;
+  notes: LocalizedText;
   status: VerificationStatus;
 }
 
@@ -21,7 +27,7 @@ export interface NutritionAnalysis {
   totalCarbs: number;
   totalFats: number;
   healthRating: number; // 1-10
-  advice: string;
+  advice: LocalizedText;
 }
 
 export enum AppStatus {

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { NutritionAnalysis, Language } from '../types';
+import { NutritionAnalysis, Language, LocalizedText } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -15,6 +15,11 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Helper to get localized text safely
+  const getLocalized = (content: LocalizedText): string => {
+    return content[language] || content['en'];
+  };
 
   const chartData = [
     { name: language === 'bn' ? 'প্রোটিন' : language === 'hi' ? 'प्रोटीन' : 'Protein', value: data.totalProtein, color: '#22c55e' },
@@ -111,15 +116,14 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
 
     try {
       // 1. Force Light Mode for PDF generation
-      // This ensures the PDF looks like a standard document (white background, dark text)
-      // regardless of the user's current theme preference.
       if (wasDark) {
         document.documentElement.classList.remove('dark');
       }
 
       // 2. Prepare the DOM for capture
-      dashboard.style.width = '1100px'; 
-      dashboard.style.padding = '40px';
+      // Increased width and padding for better spacing in the generated image
+      dashboard.style.width = '1200px'; 
+      dashboard.style.padding = '60px';
       dashboard.style.backgroundColor = '#ffffff';
       dashboard.style.borderRadius = '0px';
       dashboard.style.boxShadow = 'none';
@@ -129,7 +133,6 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       dashboard.classList.add('pdf-active');
 
       // 3. Wait for layout paints and theme switch
-      // A delay allows the browser to re-render in light mode and show hidden elements
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // 4. Capture with html2canvas
@@ -138,40 +141,88 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
         useCORS: true, 
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: 1100, 
+        windowWidth: 1200, 
         onclone: (clonedDoc) => {
-          // Ensure cloned document also doesn't have dark mode
+          // Disable animations
+          const clonedDashboard = clonedDoc.querySelector('.print-container') as HTMLElement;
+          if (clonedDashboard) {
+            clonedDashboard.style.animation = 'none';
+            clonedDashboard.style.transition = 'none';
+          }
+
+          // Ensure cloned document is light mode
           clonedDoc.documentElement.classList.remove('dark');
 
-          // A. Robust Image Handling
+          // --- SECTION A: Image Handling ---
           const printImageContainer = clonedDoc.querySelector('.print-only-image-top') as HTMLElement;
           if (printImageContainer) {
-            printImageContainer.style.display = 'flex';
-            printImageContainer.style.justifyContent = 'center';
-            printImageContainer.style.marginBottom = '30px';
+            printImageContainer.style.cssText = `
+              display: flex !important;
+              justify-content: center !important;
+              align-items: center !important;
+              margin-bottom: 40px !important;
+              opacity: 1 !important;
+              visibility: visible !important;
+            `;
             
             const img = printImageContainer.querySelector('img') as HTMLElement;
             if (img) {
-              img.style.display = 'block';
-              img.style.visibility = 'visible';
-              img.style.opacity = '1';
-              img.style.maxWidth = '500px';
-              img.style.maxHeight = '350px';
-              img.style.width = 'auto';
-              img.style.height = 'auto';
-              img.style.objectFit = 'contain';
-              img.style.borderRadius = '20px';
-              img.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+              img.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                max-width: 500px !important;
+                max-height: 400px !important;
+                width: auto !important;
+                height: auto !important;
+                object-fit: contain !important;
+                border-radius: 20px;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+              `;
             }
           }
 
-          // B. Header Visibility
+          // --- SECTION B: Header Visibility ---
           const printHeader = clonedDoc.querySelector('.print-only-header') as HTMLElement;
           if (printHeader) {
             printHeader.style.display = 'block';
+            printHeader.style.marginBottom = '50px';
           }
 
-          // C. Fix Text Truncation
+          // --- SECTION C: Fix Food List Spacing ---
+          const scrollContainer = clonedDoc.querySelector('.scroll-container-fix') as HTMLElement;
+          if (scrollContainer) {
+            // Unbound height
+            scrollContainer.style.maxHeight = 'none';
+            scrollContainer.style.overflow = 'visible';
+            
+            // Convert to flex column to enforce gap and remove space-y side effects
+            scrollContainer.style.display = 'flex';
+            scrollContainer.style.flexDirection = 'column';
+            scrollContainer.style.gap = '30px';
+            
+            // Clean up children margins
+            const children = scrollContainer.children;
+            for (let i = 0; i < children.length; i++) {
+              const child = children[i] as HTMLElement;
+              child.style.marginTop = '0';
+              child.style.marginBottom = '0';
+              // Add internal breathing room
+              child.style.padding = '32px';
+            }
+          }
+
+          // --- SECTION D: Fix Traps Section Grid ---
+          const trapsGrid = clonedDoc.querySelector('.traps-grid-fix') as HTMLElement;
+          if (trapsGrid) {
+            // Force 3-column grid layout for PDF width
+            trapsGrid.style.display = 'grid';
+            trapsGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            trapsGrid.style.gap = '40px';
+            trapsGrid.style.alignItems = 'stretch';
+          }
+
+          // --- SECTION E: Text & Layout Adjustments ---
           const nameSpans = clonedDoc.querySelectorAll('.truncate-name-fix');
           nameSpans.forEach(span => {
             const el = span as HTMLElement;
@@ -180,14 +231,16 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
             el.style.textOverflow = 'clip';
             el.style.maxWidth = 'none';
           });
-
-          // D. Expand Scrollable Areas
-          const scrollContainer = clonedDoc.querySelector('.scroll-container-fix') as HTMLElement;
-          if (scrollContainer) {
-            const el = scrollContainer as HTMLElement;
-            el.style.maxHeight = 'none';
-            el.style.overflow = 'visible';
-          }
+          
+          // Boost readability for all text
+          const allText = clonedDoc.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span');
+          allText.forEach((el) => {
+              // Ensure no text is dangerously tight
+              const style = window.getComputedStyle(el as Element);
+              if (parseFloat(style.lineHeight) < 1.4) {
+                 (el as HTMLElement).style.lineHeight = '1.5';
+              }
+          });
         }
       });
 
@@ -355,7 +408,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                   <span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-2"></span>
                   Honest Feedback
                 </p>
-                <p className="relative z-10 text-slate-100 font-medium italic leading-relaxed text-lg break-words leading-tight">"{data.advice}"</p>
+                <p className="relative z-10 text-slate-100 font-medium italic leading-relaxed text-lg break-words leading-tight">"{getLocalized(data.advice)}"</p>
               </div>
             </div>
 
@@ -430,11 +483,11 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                   </div>
                   <div className="flex-grow min-w-0">
                     <div className="flex justify-between items-start mb-3 gap-2 sm:gap-4">
-                      <span className="font-black text-xl sm:text-2xl leading-tight truncate-name-fix break-words whitespace-normal block text-slate-900 dark:text-white">{item.name}</span>
+                      <span className="font-black text-xl sm:text-2xl leading-tight truncate-name-fix break-words whitespace-normal block text-slate-900 dark:text-white">{getLocalized(item.name)}</span>
                       <span className="text-sm sm:text-base font-black text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-700 whitespace-nowrap shrink-0 shadow-sm">{item.calories} kcal</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 mb-4">
-                      <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase bg-slate-200/50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl tracking-widest">{item.portion}</span>
+                      <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase bg-slate-200/50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl tracking-widest">{getLocalized(item.portion)}</span>
                       <span className="text-[12px] font-bold text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-700 pl-4 flex gap-4">
                         <span>P: <span className="text-green-600 dark:text-green-400 font-black">{item.protein}g</span></span>
                         <span>C: <span className="text-blue-600 dark:text-blue-400 font-black">{item.carbs}g</span></span>
@@ -443,7 +496,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                     </div>
                     {item.notes && (
                       <div className="bg-white/80 dark:bg-slate-900/50 p-5 rounded-3xl border border-slate-200/40 dark:border-slate-700/40 shadow-inner">
-                        <p className="text-sm text-slate-600 dark:text-slate-300 font-semibold leading-relaxed break-words">{item.notes}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300 font-semibold leading-relaxed break-words">{getLocalized(item.notes)}</p>
                       </div>
                     )}
                   </div>
@@ -460,7 +513,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
               </h4>
               <div className="h-1 w-24 bg-red-200 dark:bg-red-800 rounded-full"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 traps-grid-fix">
             {t.rejections.map((r, i) => {
               const [title, description] = r.split(': ');
               return (

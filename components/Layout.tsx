@@ -34,14 +34,14 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogoClick }) => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors duration-300">
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 no-print transition-colors duration-300">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2 cursor-pointer group" onClick={onLogoClick}>
+        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={onLogoClick}>
             <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none group-hover:scale-105 transition-transform">
               <span className="text-white text-2xl">🍲</span>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">NutryScan <span className="text-orange-600">India</span></h1>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-widest">By Padmanava Das</p>
+            <div className="flex flex-col">
+              <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none">NutryScan</h1>
+              <span className="text-orange-600 text-[10px] font-black uppercase tracking-[0.3em] leading-tight mt-0.5">India</span>
             </div>
           </div>
           
@@ -70,8 +70,8 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogoClick }) => {
       </main>
 
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 text-center text-slate-400 dark:text-slate-500 text-sm no-print transition-colors duration-300">
-        <p>© {new Date().getFullYear()} NutryScan India. Designed by Padmanava Das.</p>
-        <p className="mt-1">Helping families uncover the real nutrition in their home meals.</p>
+        <p>© {new Date().getFullYear()} NutryScan India. Designed by Padmanava Das</p>
+        <p className="mt-1 text-xs opacity-75">Helping families uncover real nutrition. AI estimates are not medical advice.</p>
       </footer>
     </div>
   );

@@ -3,6 +3,16 @@ import { NutritionAnalysis, Language } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
+const LOCALIZED_STRING_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    en: { type: Type.STRING },
+    bn: { type: Type.STRING },
+    hi: { type: Type.STRING }
+  },
+  required: ["en", "bn", "hi"]
+};
+
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -11,13 +21,13 @@ const ANALYSIS_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Name of the food item using regional terms (e.g., 'Bhaat', 'Roti')." },
-          portion: { type: Type.STRING, description: "Estimated portion size." },
+          name: { ...LOCALIZED_STRING_SCHEMA, description: "Food name in English, Bengali, and Hindi" },
+          portion: { ...LOCALIZED_STRING_SCHEMA, description: "Portion size in English, Bengali, and Hindi" },
           calories: { type: Type.NUMBER },
           protein: { type: Type.NUMBER },
           carbs: { type: Type.NUMBER },
           fats: { type: Type.NUMBER },
-          notes: { type: Type.STRING, description: "Observations on things like oil absorption or hidden sugars." },
+          notes: { ...LOCALIZED_STRING_SCHEMA, description: "Nutritional notes in English, Bengali, and Hindi" },
           status: { type: Type.STRING, enum: ["PASS", "FAIL", "WARNING"], description: "PASS for balanced, WARNING for high oil/carb, FAIL for unhealthy portions." }
         },
         required: ["name", "portion", "calories", "protein", "carbs", "fats", "notes", "status"]
@@ -28,12 +38,12 @@ const ANALYSIS_SCHEMA = {
     totalCarbs: { type: Type.NUMBER },
     totalFats: { type: Type.NUMBER },
     healthRating: { type: Type.NUMBER },
-    advice: { type: Type.STRING, description: "A blunt, honest health tip about the meal's balance." }
+    advice: { ...LOCALIZED_STRING_SCHEMA, description: "A blunt, honest health tip in English, Bengali, and Hindi." }
   },
   required: ["items", "totalCalories", "totalProtein", "totalCarbs", "totalFats", "healthRating", "advice"]
 };
 
-const NUTRITION_CACHE_PREFIX = 'nutryscan_cache_v2_';
+const NUTRITION_CACHE_PREFIX = 'nutryscan_v3_multi_';
 
 /**
  * Robust SHA-256 hashing to ensure exact same images generate the exact same cache key.
@@ -43,9 +53,6 @@ async function computeImageHash(base64: string): Promise<string> {
   try {
     // Use Web Crypto API for collision-resistant hashing
     const encoder = new TextEncoder();
-    // Use a view of the string if possible to avoid massive allocation, 
-    // but encode() requires string. 
-    // Modern browsers handle this efficiently.
     const data = encoder.encode(base64);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -102,11 +109,8 @@ function saveToCache(key: string, data: NutritionAnalysis) {
 export const analyzeFoodImage = async (base64Image: string, lang: Language): Promise<NutritionAnalysis> => {
   const model = "gemini-3-flash-preview";
   
-  const langContext = {
-    en: "English (Indian Household terms)",
-    bn: "Bengali (বাংলা) - use 'Bhaat', 'Sorsher Tel', 'Bhaja'",
-    hi: "Hindi (हिन्दी) - use 'Ghee', 'Roti', 'Teekha'"
-  };
+  // Note: We generate content for ALL languages regardless of the requested 'lang'.
+  // 'lang' might be used for logging or initial preference if needed, but the output structure covers all.
 
   const refusalMessages = {
     en: "Content cannot be analyzed. NutryScan India does not provide analysis for illegal, harmful, or socially disapproved items.",
@@ -116,17 +120,17 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
 
   // 1. Generate a robust hash for the image
   const imageHash = await computeImageHash(base64Image);
-  const cacheKey = NUTRITION_CACHE_PREFIX + imageHash + '_' + lang;
+  // Cache key is now language-agnostic because we store all languages
+  const cacheKey = NUTRITION_CACHE_PREFIX + imageHash;
 
   // 2. Check Cache
   try {
     const cachedItem = localStorage.getItem(cacheKey);
     if (cachedItem) {
       const parsed = JSON.parse(cachedItem);
-      // Support legacy cache format or new format with timestamp
       const analysisData = parsed.data || parsed; 
       
-      // Basic validation to ensure cached data isn't corrupted
+      // Basic validation
       if (analysisData && analysisData.totalCalories !== undefined) {
         console.log('CACHE HIT: Returning stored analysis for hash', imageHash.substring(0, 8));
         return analysisData as NutritionAnalysis;
@@ -150,25 +154,17 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
           Task: Perform an 'Honest Health Check' of this Indian/Bengali household meal.
           
           **Strict Protocols:**
-          1. **Consistency:** Your output JSON structure and numerical values MUST be consistent for the same edible items or images. Aim for deterministic results with the given temperature setting (0.0).
-          2. **Safety & Ethics (ZERO TOLERANCE):** If the image clearly depicts any illegal substances (e.g., drugs), alcohol, tobacco, non-food items, or any content that is harmful, socially disapproved, or inherently unhealthy beyond typical food (e.g., highly processed junk food explicitly requested as "unhealthy"), you **MUST NOT** perform nutritional analysis. In such cases, return a JSON object with the following exact structure:
-             - \`items\`: []
-             - \`totalCalories\`: 0
-             - \`totalProtein\`: 0
-             - \`totalCarbs\`: 0
-             - \`totalFats\`: 0
-             - \`healthRating\`: 0
-             - \`advice\`: "${refusalMessages[lang]}" (use the exact localized message for the current language)
+          1. **Multilingual Output:** You MUST provide the 'name', 'portion', 'notes', and 'advice' fields in English ('en'), Bengali ('bn'), and Hindi ('hi') simultaneously.
+          2. **Consistency:** Numerical values (calories, protein, etc.) apply to the food item and remain constant across languages.
+          3. **Safety & Ethics (ZERO TOLERANCE):** If the image clearly depicts any illegal substances, alcohol, tobacco, non-food items, or harmful content, you **MUST NOT** perform analysis. Return a JSON with empty items and the localized refusal messages in the 'advice' field.
 
-          Language Protocol: Respond ONLY in ${langContext[lang]}.
-          
           Focus areas for edible items:
           1. The 'Rice' Trap: Is the carbohydrate portion too large compared to proteins?
           2. Invisible Oil: Estimate how much oil (Mustard oil/Ghee) was absorbed in fries ('Bhaja') or curries.
-          3. Protein Deficiency: Is there enough Dal, Egg, Fish, or Meat for a proper meal?
-          4. Sugar Alert: Detect hidden sugars in tea or sweets.
+          3. Protein Deficiency: Is there enough Dal, Egg, Fish, or Meat?
+          4. Sugar Alert: Detect hidden sugars.
           
-          Return JSON format strictly.`
+          Return JSON format strictly matching the provided schema.`
         },
         {
           inlineData: {
@@ -191,6 +187,11 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
   try {
     const analysisResult = JSON.parse(text) as NutritionAnalysis;
     
+    // Safety check fallback if model returns refusal logic via empty items but valid JSON
+    if (analysisResult.items.length === 0 && analysisResult.totalCalories === 0) {
+        analysisResult.advice = refusalMessages;
+    }
+
     // 4. Save to Cache
     saveToCache(cacheKey, analysisResult);
 
