@@ -1,7 +1,21 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NutritionAnalysis, Language } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+// Lazy initialization to prevent top-level crashes
+let ai: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!ai) {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.error("API_KEY is missing. Please check your environment variables.");
+      // We don't throw here to avoid crashing the whole app on load, 
+      // but the specific call to analyzeFoodImage will fail gracefully.
+    }
+    ai = new GoogleGenAI({ apiKey: apiKey as string });
+  }
+  return ai;
+};
 
 const LOCALIZED_STRING_SCHEMA = {
   type: Type.OBJECT,
@@ -143,61 +157,70 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
   console.log('CACHE MISS: Calling Gemini API for hash', imageHash.substring(0, 8));
 
   // 3. Call API if not cached
-  const response = await ai.models.generateContent({
-    model,
-    contents: {
-      parts: [
-        {
-          text: `You are NutryScan India's Health Companion. 
-          Mission: "Homemade ≠ Low Calorie. Help people see the hidden calories."
-          
-          Task: Perform an 'Honest Health Check' of this Indian/Bengali household meal.
-          
-          **Strict Protocols:**
-          1. **Multilingual Output:** You MUST provide the 'name', 'portion', 'notes', and 'advice' fields in English ('en'), Bengali ('bn'), and Hindi ('hi') simultaneously.
-          2. **Consistency:** Numerical values (calories, protein, etc.) apply to the food item and remain constant across languages.
-          3. **Safety & Ethics (ZERO TOLERANCE):** If the image clearly depicts any illegal substances, alcohol, tobacco, non-food items, or harmful content, you **MUST NOT** perform analysis. Return a JSON with empty items and the localized refusal messages in the 'advice' field.
-
-          Focus areas for edible items:
-          1. The 'Rice' Trap: Is the carbohydrate portion too large compared to proteins?
-          2. Invisible Oil: Estimate how much oil (Mustard oil/Ghee) was absorbed in fries ('Bhaja') or curries.
-          3. Protein Deficiency: Is there enough Dal, Egg, Fish, or Meat?
-          4. Sugar Alert: Detect hidden sugars.
-          
-          Return JSON format strictly matching the provided schema.`
-        },
-        {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: base64Image
-          }
-        }
-      ]
-    },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: ANALYSIS_SCHEMA,
-      temperature: 0.0, // Set to 0.0 for maximum determinism
-    }
-  });
-
-  const text = response.text;
-  if (!text) throw new Error("Empty response from AI model.");
-  
   try {
-    const analysisResult = JSON.parse(text) as NutritionAnalysis;
+    const aiInstance = getAI();
+    const response = await aiInstance.models.generateContent({
+      model,
+      contents: {
+        parts: [
+          {
+            text: `You are NutryScan India's Health Companion. 
+            Mission: "Homemade ≠ Low Calorie. Help people see the hidden calories."
+            
+            Task: Perform an 'Honest Health Check' of this Indian/Bengali household meal.
+            
+            **Strict Protocols:**
+            1. **Multilingual Output:** You MUST provide the 'name', 'portion', 'notes', and 'advice' fields in English ('en'), Bengali ('bn'), and Hindi ('hi') simultaneously.
+            2. **Consistency:** Numerical values (calories, protein, etc.) apply to the food item and remain constant across languages.
+            3. **Safety & Ethics (ZERO TOLERANCE):** If the image clearly depicts any illegal substances, alcohol, tobacco, non-food items, or harmful content, you **MUST NOT** perform analysis. Return a JSON with empty items and the localized refusal messages in the 'advice' field.
+
+            Focus areas for edible items:
+            1. The 'Rice' Trap: Is the carbohydrate portion too large compared to proteins?
+            2. Invisible Oil: Estimate how much oil (Mustard oil/Ghee) was absorbed in fries ('Bhaja') or curries.
+            3. Protein Deficiency: Is there enough Dal, Egg, Fish, or Meat?
+            4. Sugar Alert: Detect hidden sugars.
+            
+            Return JSON format strictly matching the provided schema.`
+          },
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64Image
+            }
+          }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: ANALYSIS_SCHEMA,
+        temperature: 0.0, // Set to 0.0 for maximum determinism
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI model.");
     
-    // Safety check fallback if model returns refusal logic via empty items but valid JSON
-    if (analysisResult.items.length === 0 && analysisResult.totalCalories === 0) {
-        analysisResult.advice = refusalMessages;
+    try {
+      const analysisResult = JSON.parse(text) as NutritionAnalysis;
+      
+      // Safety check fallback if model returns refusal logic via empty items but valid JSON
+      if (analysisResult.items.length === 0 && analysisResult.totalCalories === 0) {
+          analysisResult.advice = refusalMessages;
+      }
+
+      // 4. Save to Cache
+      saveToCache(cacheKey, analysisResult);
+
+      return analysisResult;
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", text, parseError);
+      throw new Error("Invalid response format from AI. Please try again.");
     }
-
-    // 4. Save to Cache
-    saveToCache(cacheKey, analysisResult);
-
-    return analysisResult;
-  } catch (parseError) {
-    console.error("Failed to parse AI response:", text, parseError);
-    throw new Error("Invalid response format from AI. Please try again.");
+  } catch (apiError: any) {
+    console.error("API Call Failed:", apiError);
+    if (apiError.message && apiError.message.includes("API key")) {
+        throw new Error("System configuration error: Invalid or missing API Key.");
+    }
+    throw apiError;
   }
 };
