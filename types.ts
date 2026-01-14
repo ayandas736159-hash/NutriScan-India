@@ -1,7 +1,17 @@
-
 export type Language = 'en' | 'bn' | 'hi';
 
 export type VerificationStatus = 'PASS' | 'FAIL' | 'WARNING';
+
+export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active';
+
+export interface UserProfile {
+  age: number;
+  gender: 'male' | 'female';
+  weight: number; // kg
+  height: number; // cm
+  activityLevel: ActivityLevel;
+  tdee: number; // Total Daily Energy Expenditure
+}
 
 export interface LocalizedText {
   en: string;

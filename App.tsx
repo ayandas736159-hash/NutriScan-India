@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Layout from './components/Layout';
 import Scanner from './components/Scanner';
 import NutritionDashboard from './components/NutritionDashboard';
-import { AppStatus, NutritionAnalysis, Language } from './types';
+import UserProfileForm from './components/UserProfileForm';
+import { AppStatus, NutritionAnalysis, Language, UserProfile } from './types';
 import { analyzeFoodImage } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -11,6 +12,21 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>('en');
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isProfileFormOpen, setIsProfileFormOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('nutryscan_profile');
+    if (saved) {
+      setUserProfile(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleSaveProfile = (profile: UserProfile) => {
+    setUserProfile(profile);
+    localStorage.setItem('nutryscan_profile', JSON.stringify(profile));
+    setIsProfileFormOpen(false);
+  };
 
   const handleImageCaptured = useCallback(async (base64: string) => {
     setStatus(AppStatus.LOADING);
@@ -57,7 +73,8 @@ const App: React.FC = () => {
       trap3Sub: "80% of Indian diets lack essential protein levels.",
       errorTitle: "Analysis Interrupted",
       errorMessage: "Something went wrong. Please try scanning again.",
-      retryButton: "RETRY SCAN"
+      retryButton: "RETRY SCAN",
+      setupProfile: "Setup My Health Profile"
     },
     bn: {
       title: "বাড়ির খাবার মানেই কি ভালো?",
@@ -80,7 +97,8 @@ const App: React.FC = () => {
       trap3Sub: "প্রায় ৮০% ভারতীয়র খাবারে সঠিক প্রোটিনের অভাব রয়েছে।",
       errorTitle: "বিশ্লেষণ বাধাপ্রাপ্ত",
       errorMessage: "কিছু ভুল হয়েছে। অনুগ্রহ করে আবার স্ক্যান করার চেষ্টা করুন।",
-      retryButton: "পুনরায় স্ক্যান করুন"
+      retryButton: "পুনরায় স্ক্যান করুন",
+      setupProfile: "স্বাস্থ্য প্রোফাইল সেট আপ করুন"
     },
     hi: {
       title: "घर का खाना ≠ हेल्दी।",
@@ -103,7 +121,8 @@ const App: React.FC = () => {
       trap3Sub: "80% भारतीयों के भोजन में पर्याप्त प्रोटीन नहीं होता।",
       errorTitle: "विश्लेषण बाधित",
       errorMessage: "कुछ गलत हो गया। कृपया फिर से स्कैन करने का प्रयास करें।",
-      retryButton: "पुनः स्कैन करें"
+      retryButton: "पुनः स्कैन करें",
+      setupProfile: "हेल्थ प्रोफाइल सेटअप करें"
     }
   };
 
@@ -112,26 +131,44 @@ const App: React.FC = () => {
   return (
     <Layout onLogoClick={reset}>
       <div className="max-w-6xl mx-auto">
-        {/* Language Switcher */}
-        <div className="flex justify-center mb-10 gap-2 no-print">
-          {(['en', 'bn', 'hi'] as Language[]).map((l) => (
-            <button
-              key={l}
-              onClick={() => setLanguage(l)}
-              className={`px-5 py-2 rounded-2xl text-xs font-bold transition-all transform active:scale-95 ${
-                language === l 
-                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-200 dark:shadow-none' 
-                  : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : 'हिन्दी'}
-            </button>
-          ))}
+        {/* Profile Form Overlay */}
+        {isProfileFormOpen && (
+          <UserProfileForm 
+            language={language} 
+            initialProfile={userProfile} 
+            onSave={handleSaveProfile} 
+            onClose={() => setIsProfileFormOpen(false)} 
+          />
+        )}
+
+        {/* Language Switcher & Profile Button */}
+        <div className="flex flex-col sm:flex-row justify-center items-center mb-10 gap-4 no-print">
+          <div className="flex gap-2">
+            {(['en', 'bn', 'hi'] as Language[]).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLanguage(l)}
+                className={`px-5 py-2 rounded-2xl text-xs font-bold transition-all transform active:scale-95 ${
+                  language === l 
+                    ? 'bg-orange-600 text-white shadow-lg shadow-orange-200 dark:shadow-none' 
+                    : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : 'हिन्दी'}
+              </button>
+            ))}
+          </div>
+          
+          <button 
+            onClick={() => setIsProfileFormOpen(true)}
+            className="flex items-center gap-2 px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+          >
+            <span>👤</span> {userProfile ? userProfile.tdee + ' kcal' : t.setupProfile}
+          </button>
         </div>
 
         {status === AppStatus.IDLE && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-12">
-            {/* Attractive Hero Section */}
             <div className="text-center">
               <span className="inline-block px-4 py-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6 border border-orange-200 dark:border-orange-800">
                 Scientifically Driven Nutrition
@@ -144,7 +181,6 @@ const App: React.FC = () => {
               </p>
             </div>
 
-            {/* Research Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { val: t.stat1, sub: t.stat1Sub, icon: "🩺", color: "from-blue-500 to-blue-600", baseColor: "blue" },
@@ -153,14 +189,9 @@ const App: React.FC = () => {
               ].map((stat, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group flex flex-col items-center transition-colors">
                   <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-5 blur-2xl group-hover:opacity-10 transition-opacity`}></div>
-                  
-                  {/* New styled icon container */}
-                  <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 
-                                   bg-${stat.baseColor}-100 dark:bg-${stat.baseColor}-900/30 text-slate-900 dark:text-white
-                                   text-4xl shadow-md dark:shadow-none transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                  <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-4xl shadow-md transition-transform group-hover:scale-110`}>
                     {stat.icon}
                   </div>
-                  
                   <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-2">{stat.val}</h3>
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-bold leading-relaxed">{stat.sub}</p>
                 </div>
@@ -169,7 +200,6 @@ const App: React.FC = () => {
             
             <Scanner onImageCaptured={handleImageCaptured} isLoading={false} language={language} />
             
-            {/* Truth Traps Section */}
             <div className="bg-slate-900 dark:bg-black rounded-[3.5rem] p-12 text-white shadow-2xl relative overflow-hidden border-b-[16px] border-orange-600">
               <div className="absolute top-0 right-0 w-96 h-96 bg-orange-600 opacity-5 blur-[120px] rounded-full"></div>
               <div className="relative z-10">
@@ -180,21 +210,21 @@ const App: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                   <div className="text-center group">
-                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform group-hover:rotate-6">
+                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform">
                       <span className="text-3xl">🍳</span>
                     </div>
                     <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap1}</h4>
                     <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap1Sub}</p>
                   </div>
                   <div className="text-center group border-y md:border-y-0 md:border-x border-slate-800 py-10 md:py-0 md:px-6">
-                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform group-hover:-rotate-6">
+                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform">
                       <span className="text-3xl">🥘</span>
                     </div>
                     <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap2}</h4>
                     <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap2Sub}</p>
                   </div>
                   <div className="text-center group">
-                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform group-hover:scale-110">
+                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform">
                       <span className="text-3xl">🥗</span>
                     </div>
                     <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap3}</h4>
@@ -207,29 +237,55 @@ const App: React.FC = () => {
         )}
 
         {status === AppStatus.LOADING && (
-          <div className="flex flex-col items-center justify-center py-24 text-center space-y-10 animate-in fade-in duration-500">
-            <div className="relative">
-              <div className="w-40 h-40 border-[12px] border-slate-100 dark:border-slate-800 border-t-orange-600 rounded-full animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-5xl animate-bounce">🍲</span>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-in fade-in duration-700 py-12">
+            
+            <div className="relative w-80 h-80 flex items-center justify-center mb-10">
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 bg-orange-500/10 dark:bg-orange-500/5 rounded-full blur-3xl animate-pulse"></div>
+              
+              {/* Outer Rotating Ring */}
+              <div className="absolute w-72 h-72 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-full animate-spin-slow opacity-60"></div>
+              
+              {/* Inner Rotating Ring (Reverse) */}
+              <div className="absolute w-56 h-56 border border-slate-300 dark:border-slate-700 rounded-full animate-spin-slow-reverse opacity-60"></div>
+              
+              {/* Ripples */}
+              <div className="absolute w-full h-full flex items-center justify-center">
+                 <div className="absolute w-40 h-40 bg-orange-100/50 dark:bg-orange-900/20 rounded-full animate-ripple"></div>
+                 <div className="absolute w-40 h-40 bg-orange-100/30 dark:bg-orange-900/10 rounded-full animate-ripple" style={{animationDelay: '1s'}}></div>
+              </div>
+
+              {/* Central Scanner Box */}
+              <div className="relative z-10 w-32 h-32 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl shadow-orange-500/10 flex items-center justify-center overflow-hidden border-4 border-slate-50 dark:border-slate-800">
+                 {/* Food Emoji */}
+                 <span className="text-5xl animate-float-cute relative z-10">🍲</span>
+                 
+                 {/* Scanning Beam */}
+                 <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-orange-400/20 to-transparent animate-scan-vertical z-20"></div>
+                 
+                 {/* Scan Grid Overlay */}
+                 <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:10px_10px] opacity-20 z-0"></div>
+              </div>
+
+              {/* Orbiting Elements */}
+              <div className="absolute w-full h-full animate-spin-slow" style={{animationDuration: '15s'}}>
+                 <div className="absolute top-10 left-1/2 -translate-x-1/2 w-8 h-8 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center text-xs border border-slate-100 dark:border-slate-700">🔥</div>
+              </div>
+              <div className="absolute w-full h-full animate-spin-slow-reverse" style={{animationDuration: '18s'}}>
+                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-8 h-8 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center text-xs border border-slate-100 dark:border-slate-700">⚖️</div>
               </div>
             </div>
-            <div>
-              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{t.loading}</h2>
-              <p className="text-slate-500 dark:text-slate-400 mt-3 font-bold text-lg">{t.loadingSub}</p>
-            </div>
-            <div className="space-y-4 w-full max-w-sm">
-              <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
-                <div className="h-full bg-orange-600 w-2/3 animate-[loading_1.5s_ease-in-out_infinite]"></div>
+
+            <div className="relative z-10 max-w-md mx-auto">
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-4">
+                {t.loading}
+              </h2>
+              <div className="inline-block px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+                <p className="text-slate-500 dark:text-slate-400 font-bold text-sm tracking-wide">
+                  {t.loadingSub}
+                </p>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 uppercase font-black tracking-[0.3em]">{t.audit}</p>
             </div>
-            <style>{`
-              @keyframes loading {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-              }
-            `}</style>
           </div>
         )}
 
@@ -239,12 +295,14 @@ const App: React.FC = () => {
             onReset={reset} 
             imagePreview={imagePreview}
             language={language}
+            userProfile={userProfile}
+            onOpenProfile={() => setIsProfileFormOpen(true)}
           />
         )}
 
         {status === AppStatus.ERROR && (
           <div className="bg-red-50 dark:bg-red-900/10 border-4 border-red-100 dark:border-red-900/30 rounded-[3rem] p-16 text-center animate-in zoom-in duration-300">
-            <div className="w-28 h-28 bg-red-100 dark:bg-red-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl shadow-red-200 dark:shadow-none">
+            <div className="w-28 h-28 bg-red-100 dark:bg-red-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl">
               <span className="text-6xl">🛑</span>
             </div>
             <h2 className="text-4xl font-black text-red-900 dark:text-red-200 mb-4 tracking-tighter">{t.errorTitle}</h2>

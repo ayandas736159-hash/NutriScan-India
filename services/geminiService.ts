@@ -1,7 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NutritionAnalysis, Language } from "../types";
 
-// Lazy initialization to prevent top-level crashes
 let ai: GoogleGenAI | null = null;
 
 const getAI = () => {
@@ -9,8 +8,6 @@ const getAI = () => {
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
       console.error("API_KEY is missing. Please check your environment variables.");
-      // We don't throw here to avoid crashing the whole app on load, 
-      // but the specific call to analyzeFoodImage will fail gracefully.
     }
     ai = new GoogleGenAI({ apiKey: apiKey as string });
   }
@@ -59,63 +56,37 @@ const ANALYSIS_SCHEMA = {
 
 const NUTRITION_CACHE_PREFIX = 'nutryscan_v3_multi_';
 
-/**
- * Robust SHA-256 hashing to ensure exact same images generate the exact same cache key.
- * Falls back to a simple hash if Crypto API is unavailable.
- */
 async function computeImageHash(base64: string): Promise<string> {
   try {
-    // Use Web Crypto API for collision-resistant hashing
     const encoder = new TextEncoder();
     const data = encoder.encode(base64);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   } catch (e) {
-    console.warn("Crypto API unavailable, using fallback hash", e);
-    // Fallback: Simple DJB2-like string hash
     let hash = 5381;
     for (let i = 0; i < base64.length; i++) {
-      hash = ((hash << 5) + hash) + base64.charCodeAt(i); /* hash * 33 + c */
+      hash = ((hash << 5) + hash) + base64.charCodeAt(i);
     }
     return 'simple_' + hash.toString();
   }
 }
 
-/**
- * Save to localStorage with quota management.
- * If quota is exceeded, clears old NutryScan cache entries.
- */
 function saveToCache(key: string, data: NutritionAnalysis) {
   try {
-    const cacheEntry = JSON.stringify({
-      timestamp: Date.now(),
-      data
-    });
+    const cacheEntry = JSON.stringify({ timestamp: Date.now(), data });
     localStorage.setItem(key, cacheEntry);
-    console.log("Analysis cached successfully.");
   } catch (e: any) {
     if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
-      console.warn("LocalStorage quota exceeded. Clearing old NutryScan cache...");
-      // Clear all keys starting with our prefix to make space
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && k.startsWith(NUTRITION_CACHE_PREFIX)) {
-          keysToRemove.push(k);
-        }
+        if (k && k.startsWith(NUTRITION_CACHE_PREFIX)) keysToRemove.push(k);
       }
       keysToRemove.forEach(k => localStorage.removeItem(k));
-      
-      // Retry saving
       try {
         localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data }));
-        console.log("Analysis cached after cleanup.");
-      } catch (retryErr) {
-        console.error("Failed to cache analysis even after cleanup:", retryErr);
-      }
-    } else {
-      console.error("LocalStorage error:", e);
+      } catch (retryErr) {}
     }
   }
 }
@@ -123,40 +94,26 @@ function saveToCache(key: string, data: NutritionAnalysis) {
 export const analyzeFoodImage = async (base64Image: string, lang: Language): Promise<NutritionAnalysis> => {
   const model = "gemini-3-flash-preview";
   
-  // Note: We generate content for ALL languages regardless of the requested 'lang'.
-  // 'lang' might be used for logging or initial preference if needed, but the output structure covers all.
-
   const refusalMessages = {
-    en: "Content cannot be analyzed. NutryScan India does not provide analysis for illegal, harmful, or socially disapproved items.",
-    bn: "বিশ্লেষণ করা সম্ভব নয়। NutryScan India অবৈধ, ক্ষতিকারক, বা সামাজিকভাবে অস্বীকৃত জিনিসপত্রের জন্য বিশ্লেষণ প্রদান করে না।",
-    hi: "सामग्री का विश्लेषण नहीं किया जा सकता। NutryScan India अवैध, हानिकारक, या सामाजिक रूप से अस्वीকৃত वस्तुओं के लिए विश्लेषण प्रदान नहीं करता है।"
+    en: "Content cannot be analyzed. This image does not contain edible food. NutryScan India only provides analysis for Indian and Bengali meals. Please scan a thali or meal.",
+    bn: "বিশ্লেষণ করা সম্ভব নয়। এই ছবিতে কোনও খাবার নেই। NutryScan India শুধুমাত্র ভারতীয় এবং বাঙালি খাবারের বিশ্লেষণ প্রদান করে। আপনার থালি বা খাবারের ছবি স্ক্যান করুন।",
+    hi: "सामग्री का বিশ্লেষণ করা যাবে না। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का বিশ্লেষণ प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
   };
 
-  // 1. Generate a robust hash for the image
   const imageHash = await computeImageHash(base64Image);
-  // Cache key is now language-agnostic because we store all languages
   const cacheKey = NUTRITION_CACHE_PREFIX + imageHash;
 
-  // 2. Check Cache
   try {
     const cachedItem = localStorage.getItem(cacheKey);
     if (cachedItem) {
       const parsed = JSON.parse(cachedItem);
       const analysisData = parsed.data || parsed; 
-      
-      // Basic validation
-      if (analysisData && analysisData.totalCalories !== undefined) {
-        console.log('CACHE HIT: Returning stored analysis for hash', imageHash.substring(0, 8));
+      if (analysisData && (analysisData.items || analysisData.totalCalories !== undefined)) {
         return analysisData as NutritionAnalysis;
       }
     }
-  } catch (e) {
-    console.warn("Cache read failed:", e);
-  }
+  } catch (e) {}
 
-  console.log('CACHE MISS: Calling Gemini API for hash', imageHash.substring(0, 8));
-
-  // 3. Call API if not cached
   try {
     const aiInstance = getAI();
     const response = await aiInstance.models.generateContent({
@@ -167,18 +124,22 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
             text: `You are NutryScan India's Health Companion. 
             Mission: "Homemade ≠ Low Calorie. Help people see the hidden calories."
             
-            Task: Perform an 'Honest Health Check' of this Indian/Bengali household meal.
-            
-            **Strict Protocols:**
-            1. **Multilingual Output:** You MUST provide the 'name', 'portion', 'notes', and 'advice' fields in English ('en'), Bengali ('bn'), and Hindi ('hi') simultaneously.
-            2. **Consistency:** Numerical values (calories, protein, etc.) apply to the food item and remain constant across languages.
-            3. **Safety & Ethics (ZERO TOLERANCE):** If the image clearly depicts any illegal substances, alcohol, tobacco, non-food items, or harmful content, you **MUST NOT** perform analysis. Return a JSON with empty items and the localized refusal messages in the 'advice' field.
+            **URGENT: NON-FOOD DETECTION PROTOCOL**
+            - Examine the image closely. If it contains bedsheets, fabrics, furniture, flooring, body parts (without food), electronics, animals, or ANY non-food household item, you MUST STOP.
+            - Do NOT hallucinate food items. Do NOT assume a pattern on a bedsheet is a dish.
+            - If non-food is detected: 
+              - 'items' MUST be an empty array [].
+              - 'totalCalories', 'totalProtein', 'totalCarbs', 'totalFats', 'healthRating' MUST all be exactly 0.
+              - 'advice' MUST contain a message explaining that no food was found, localized for English, Bengali, and Hindi as follows:
+                en: "Content cannot be analyzed. This image does not contain edible food. NutryScan India only provides analysis for Indian and Bengali meals. Please scan a thali or meal."
+                bn: "বিশ্লেষণ করা সম্ভব নয়। এই ছবিতে কোনও খাবার নেই। NutryScan India শুধুমাত্র ভারতীয় এবং বাঙালি খাবারের বিশ্লেষণ প্রদান করে। আপনার থালি বা খাবারের ছবি স্ক্যান করুন।"
+                hi: "सामग्री का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
 
-            Focus areas for edible items:
-            1. The 'Rice' Trap: Is the carbohydrate portion too large compared to proteins?
-            2. Invisible Oil: Estimate how much oil (Mustard oil/Ghee) was absorbed in fries ('Bhaja') or curries.
-            3. Protein Deficiency: Is there enough Dal, Egg, Fish, or Meat?
-            4. Sugar Alert: Detect hidden sugars.
+            **FOOD ANALYSIS PROTOCOL (ONLY if food is clearly present):**
+            1. Multilingual: Provide 'name', 'portion', 'notes', and 'advice' in 'en', 'bn', and 'hi'.
+            2. The 'Rice' Trap: Audit carbohydrate-heavy Bengali/Indian thalis.
+            3. Invisible Oil: Account for oil soak in Bhaja, Luchi, Paratha, or curries.
+            4. Portions: Estimate based on standard household thali dimensions.
             
             Return JSON format strictly matching the provided schema.`
           },
@@ -193,7 +154,7 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
       config: {
         responseMimeType: "application/json",
         responseSchema: ANALYSIS_SCHEMA,
-        temperature: 0.0, // Set to 0.0 for maximum determinism
+        temperature: 0.0,
       }
     });
 
@@ -203,21 +164,26 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
     try {
       const analysisResult = JSON.parse(text) as NutritionAnalysis;
       
-      // Safety check fallback if model returns refusal logic via empty items but valid JSON
-      if (analysisResult.items.length === 0 && analysisResult.totalCalories === 0) {
-          analysisResult.advice = refusalMessages;
+      // Safety check: force zero if no items or if AI hallucinated values with 0 items
+      if (!analysisResult.items || analysisResult.items.length === 0) {
+          analysisResult.items = [];
+          analysisResult.totalCalories = 0;
+          analysisResult.totalProtein = 0;
+          analysisResult.totalCarbs = 0;
+          analysisResult.totalFats = 0;
+          analysisResult.healthRating = 0;
+          // Ensure refusal advice is also localized if AI didn't provide it correctly for non-food
+          if (!analysisResult.advice || !analysisResult.advice.en || analysisResult.advice.en.includes("Content cannot be analyzed")) {
+            analysisResult.advice = refusalMessages;
+          }
       }
 
-      // 4. Save to Cache
       saveToCache(cacheKey, analysisResult);
-
       return analysisResult;
     } catch (parseError) {
-      console.error("Failed to parse AI response:", text, parseError);
       throw new Error("Invalid response format from AI. Please try again.");
     }
   } catch (apiError: any) {
-    console.error("API Call Failed:", apiError);
     if (apiError.message && apiError.message.includes("API key")) {
         throw new Error("System configuration error: Invalid or missing API Key.");
     }
