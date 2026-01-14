@@ -196,7 +196,7 @@ const App: React.FC = () => {
                     : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
                 }`}
               >
-                {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : l === 'hi' ? 'हिन्दी' : 'অসমীয়া'}
+                {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : l === 'hi' ? 'হিन्दी' : 'অসমীয়া'}
               </button>
             ))}
           </div>
@@ -272,14 +272,14 @@ const App: React.FC = () => {
             <div className={`w-full max-w-4xl border-2 sm:border-4 rounded-[4rem] p-8 sm:p-20 text-center shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] relative overflow-hidden transition-all duration-700 ${isLimitExceeded ? 'bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30' : 'bg-red-50/50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30'}`}>
               
               {/* Background Ambient Glows */}
-              <div className={`absolute top-0 left-1/4 w-96 h-96 ${isLimitExceeded ? 'bg-orange-500' : 'bg-red-500'} opacity-[0.03] blur-[120px] rounded-full`}></div>
-              <div className={`absolute bottom-0 right-1/4 w-96 h-96 ${isLimitExceeded ? 'bg-orange-600' : 'bg-red-600'} opacity-[0.03] blur-[120px] rounded-full`}></div>
+              <div className={`absolute top-0 left-1/4 w-96 h-96 ${isLimitExceeded ? 'bg-orange-500' : 'bg-red-500'} opacity-[0.05] blur-[120px] rounded-full`}></div>
+              <div className={`absolute bottom-0 right-1/4 w-96 h-96 ${isLimitExceeded ? 'bg-orange-600' : 'bg-red-600'} opacity-[0.05] blur-[120px] rounded-full`}></div>
 
               <div className={`w-28 h-28 ${isLimitExceeded ? 'bg-orange-500 shadow-orange-500/20' : 'bg-red-500 shadow-red-500/20'} rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-2xl transition-transform hover:scale-110 duration-500 relative group`}>
                 <span className="text-5xl group-hover:animate-bounce">{isLimitExceeded ? '⏳' : '🛑'}</span>
               </div>
 
-              <h2 className={`text-4xl sm:text-6xl font-black ${isLimitExceeded ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400'} mb-6 tracking-tighter leading-none`}>
+              <h2 className={`text-4xl sm:text-6xl font-black ${isLimitExceeded ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400'} mb-6 tracking-tighter leading-none uppercase`}>
                 {isLimitExceeded ? String(t.limitTitle) : String(t.errorTitle)}
               </h2>
 
@@ -288,20 +288,20 @@ const App: React.FC = () => {
               </p>
 
               {/* Enhanced Quote Section */}
-              <div className="relative mb-16 py-12 px-8 bg-white dark:bg-black/40 rounded-[3rem] border border-slate-200/50 dark:border-white/10 shadow-inner group transition-all hover:shadow-2xl animate-float-cute">
+              <div className="relative mb-16 py-14 px-8 bg-white/40 dark:bg-black/30 rounded-[3rem] border border-slate-200/50 dark:border-white/10 shadow-inner group transition-all hover:shadow-2xl animate-float-cute backdrop-blur-sm">
                 {/* Decorative Quotes */}
-                <span className="absolute top-6 left-8 text-8xl font-serif text-orange-500/10 dark:text-orange-500/5 pointer-events-none">“</span>
-                <span className="absolute bottom-[-10px] right-8 text-8xl font-serif text-orange-500/10 dark:text-orange-500/5 pointer-events-none">”</span>
+                <span className="absolute top-6 left-8 text-8xl font-serif text-orange-500/10 dark:text-orange-500/5 pointer-events-none select-none">“</span>
+                <span className="absolute bottom-[-10px] right-8 text-8xl font-serif text-orange-500/10 dark:text-orange-500/5 pointer-events-none select-none">”</span>
                 
-                <p className="text-xl sm:text-2xl text-slate-800 dark:text-slate-100 italic font-bold mb-6 leading-relaxed relative z-10 px-4">
+                <p className="text-xl sm:text-2xl text-slate-800 dark:text-slate-100 italic font-bold mb-8 leading-relaxed relative z-10 px-4">
                   {randomQuote.text}
                 </p>
-                <div className="flex items-center justify-center space-x-3">
-                   <div className="h-px w-8 bg-orange-500/30"></div>
+                <div className="flex items-center justify-center space-x-4">
+                   <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-orange-500/30"></div>
                    <p className="text-orange-600 dark:text-orange-500 text-[11px] font-black uppercase tracking-[0.4em]">
                      {randomQuote.author}
                    </p>
-                   <div className="h-px w-8 bg-orange-500/30"></div>
+                   <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-orange-500/30"></div>
                 </div>
               </div>
 
