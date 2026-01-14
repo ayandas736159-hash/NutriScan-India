@@ -13,24 +13,61 @@ interface NutritionDashboardProps {
   onOpenProfile: () => void;
 }
 
+// Custom Tooltip for Recharts PieChart - Made more robust
+const CustomTooltip = ({ active, payload, label, language }: { active?: boolean; payload?: any[]; label?: string; language: Language }) => {
+  if (active && payload && payload.length) {
+    const entry = payload[0];
+    const name = String(entry.name || '');
+    const value = String(entry.value || '0');
+
+    const translations = {
+      en: "Gram",
+      bn: "গ্রাম",
+      hi: "ग्राम"
+    }
+
+    return (
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+        <p className="text-sm font-bold text-slate-900 dark:text-white">{`${name}: ${value}${translations[language]}`}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+
 const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, imagePreview, language, userProfile, onOpenProfile }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const getLocalized = (content: LocalizedText): string => {
-    return content[language] || content['en'];
+  // Extremely defensive getLocalized to prevent React error #31
+  const getLocalized = (content: any): string => {
+    if (typeof content === 'string') return content;
+    if (content && typeof content === 'object') {
+      // If it has our expected keys, return the localized string
+      if ('en' in content || 'bn' in content || 'hi' in content) {
+        const val = content[language] || content['en'] || content['bn'] || content['hi'] || '';
+        return typeof val === 'string' ? val : JSON.stringify(val);
+      }
+      // If it's a different object, return empty or string representation
+      return '';
+    }
+    if (content === null || content === undefined) return '';
+    return String(content);
   };
 
-  const hasFoodDetected = data.items && data.items.length > 0 && data.totalCalories > 0;
+  const hasFoodDetected = data && data.items && data.items.length > 0 && Number(data.totalCalories) > 0;
 
   const chartData = [
-    { name: language === 'bn' ? 'প্রোটিন' : language === 'hi' ? 'प्रोटीन' : 'Protein', value: data.totalProtein || 0, color: '#22c55e' },
-    { name: language === 'bn' ? 'কার্বোহাইড্রেট' : language === 'hi' ? 'कार्वस' : 'Carbs', value: data.totalCarbs || 0, color: '#3b82f6' },
-    { name: language === 'bn' ? 'ফ্যাট' : language === 'hi' ? 'फैट' : 'Fats', value: data.totalFats || 0, color: '#f59e0b' },
+    { name: language === 'bn' ? 'প্রোটিন' : language === 'hi' ? 'प्रोटीन' : 'Protein', value: Number(data.totalProtein) || 0, color: '#22c55e' },
+    { name: language === 'bn' ? 'কার্বোহাইড্রেট' : language === 'hi' ? 'কার্বস' : 'Carbs', value: Number(data.totalCarbs) || 0, color: '#3b82f6' },
+    { name: language === 'bn' ? 'ফ্যাট' : language === 'hi' ? 'ফ্যাট' : 'Fats', value: Number(data.totalFats) || 0, color: '#f59e0b' },
   ];
 
-  const remainingCalories = userProfile ? Math.max(0, userProfile.tdee - data.totalCalories) : 0;
+  const safeTarget = userProfile ? Number(userProfile.tdee) : 2000;
+  const safeTotalCalories = Number(data.totalCalories) || 0;
+  const remainingCalories = Math.max(0, safeTarget - safeTotalCalories);
 
   const translations = {
     en: {
@@ -38,7 +75,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       ready: "THE TRUTH IS OUT!",
       zeroError: "Your honest meal scan is ready below.",
       btn: "Check Another Meal",
-      rejectionTitle: "Common Household Traps", // Removed ⚠️
+      rejectionTitle: "Common Household Traps",
       rejections: [
         "Oil Soak: Fried items or oily curries often hide excess fat, hindering weight loss efforts.",
         "Rice Overload: A disproportionate rice-to-protein ratio can lead to energy crashes and sugar spikes.",
@@ -67,7 +104,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       ready: "আসল সত্যিটা দেখুন!",
       zeroError: "আপনার খাবারের Honest Check নিচে দেওয়া হলো।",
       btn: "অন্য খাবার চেক করুন",
-      rejectionTitle: "সাধারণ গৃহস্থালীর ভুলগুলো", // Removed ⚠️
+      rejectionTitle: "সাধারণ গৃহস্থালীর ভুলগুলো",
       rejections: [
         "তেল সোক: ভাজা বা তৈলাক্ত তরকারিতে প্রায়শই অতিরিক্ত ফ্যাট থাকে, যা ওজন কমাতে বাধা দেয়।",
         "ভাতের আধিক্য: প্রোটিনের তুলনায় ভাতের অসম অনুপাত শক্তি হ্রাস এবং চিনি বৃদ্ধির কারণ হতে পারে।",
@@ -96,7 +133,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       ready: "सच्चाई आपके सामने है!",
       zeroError: "आपका Honest Check नीचे दिया गया है।",
       btn: "दूसरा भोजन चेक करें",
-      rejectionTitle: "सामान्य घरेलू गलतियाँ", // Removed ⚠️
+      rejectionTitle: "सामान्य घरेलू गलतियाँ",
       rejections: [
         "ऑयल सोक: तले हुए खाद्य पदार्थ या तैलीय करी में अक्सर अतिरिक्त वसा होती है, जो वजन घटाने के प्रयासों में बाधा डालती है।",
         "चावल की अधिकता: प्रोटीन और चावल का असंतुलित अनुपात ऊर्जा में गिरावट और शुगर स्पाइक्स का कारण बन सकता है।",
@@ -133,8 +170,6 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
 
     try {
       if (wasDark) document.documentElement.classList.remove('dark');
-      
-      // Force consistent width for capture to prevent responsive overlapping
       dashboard.style.width = '1200px'; 
       dashboard.style.padding = '60px';
       dashboard.style.backgroundColor = '#ffffff';
@@ -143,7 +178,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       dashboard.style.margin = '0';
       dashboard.classList.add('pdf-active');
 
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Increased delay for charts to stabilize
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       const canvas = await html2canvas(dashboard, {
         scale: 2, 
@@ -157,15 +192,11 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
             clonedDashboard.style.animation = 'none';
             clonedDashboard.style.transition = 'none';
           }
-
-          // Force the header to appear nicely in PDF
           const printHeader = clonedDoc.querySelector('.print-only-header') as HTMLElement;
           if (printHeader) {
             printHeader.style.display = 'block';
             printHeader.style.marginBottom = '40px';
           }
-
-          // Daily Balance logic for PDF
           const dailyBalanceCard = clonedDoc.querySelector('.daily-balance-card') as HTMLElement;
           if (dailyBalanceCard) {
             dailyBalanceCard.classList.remove('no-print');
@@ -179,41 +210,31 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
               width: calc(100% - 4px) !important;
               box-sizing: border-box !important;
             `;
-            // Ensure icons/text inside are visible
             const balanceText = dailyBalanceCard.querySelectorAll('p, span');
             balanceText.forEach(t => (t as HTMLElement).style.color = 'white');
           }
-
-          // PREVENT OVERLAP: Force Vertical Layout
-          // This fixes the Pie Chart overlapping with the items list
           const mainLayoutGrid = clonedDoc.querySelector('.lg\\:grid-cols-\\[380px_1fr\\]') as HTMLElement;
           if (mainLayoutGrid) {
             mainLayoutGrid.style.display = 'flex';
             mainLayoutGrid.style.flexDirection = 'column';
             mainLayoutGrid.style.gap = '40px';
           }
-
           const chartsContainer = clonedDoc.querySelector('.chart-card-container') as HTMLElement;
           if (chartsContainer) {
             chartsContainer.style.width = '100%';
             chartsContainer.style.marginBottom = '20px';
             chartsContainer.style.minHeight = '500px';
           }
-
           const itemsContainer = clonedDoc.querySelector('.items-card-container') as HTMLElement;
           if (itemsContainer) {
             itemsContainer.style.width = '100%';
             itemsContainer.style.marginBottom = '40px';
           }
-
-          // Expand scroll containers for PDF
           const scrollContainers = clonedDoc.querySelectorAll('.custom-scrollbar');
           scrollContainers.forEach(el => {
             (el as HTMLElement).style.maxHeight = 'none';
             (el as HTMLElement).style.overflow = 'visible';
           });
-
-          // Style traps grid for better alignment
           const trapsGrid = clonedDoc.querySelector('.traps-grid-fix') as HTMLElement;
           if (trapsGrid) {
             trapsGrid.style.display = 'grid';
@@ -252,24 +273,21 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
     }
   };
 
+  const safeHealthRating = Number(data.healthRating) || 0;
+
   return (
     <>
       {isGeneratingPdf && (
         <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300">
           <div className="text-center p-12 max-w-sm w-full flex flex-col items-center">
-            
             <div className="relative w-32 h-32 mb-8 flex items-center justify-center">
-               {/* Ripples */}
                <div className="absolute inset-0 bg-orange-500 rounded-full animate-ripple opacity-30"></div>
                <div className="absolute inset-0 bg-orange-500 rounded-full animate-ripple opacity-20" style={{animationDelay: '0.6s'}}></div>
                <div className="absolute inset-0 bg-orange-500 rounded-full animate-ripple opacity-10" style={{animationDelay: '1.2s'}}></div>
-               
-               {/* Core Circle */}
                <div className="relative z-10 w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/20">
                  <span className="text-5xl animate-float-cute">📄</span>
                </div>
             </div>
-
             <h3 className="text-3xl font-black text-white mb-3 tracking-tight">{t.generating}</h3>
             <p className="text-slate-400 font-medium text-base">{t.generatingSub}</p>
           </div>
@@ -278,7 +296,6 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
 
       <div ref={dashboardRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 print-container bg-slate-50 dark:bg-slate-950 rounded-[2.5rem] transition-colors duration-300">
         
-        {/* PDF Only Header */}
         <div className="print-only print-only-header mb-10 border-b-4 border-orange-500 pb-8 px-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-6">
@@ -293,7 +310,6 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
           </div>
         </div>
 
-        {/* Daily Balance Section */}
         {hasFoodDetected && (
           <div className="daily-balance-card mx-2 bg-gradient-to-r from-slate-900 to-black dark:from-black dark:to-slate-900 rounded-[3rem] p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl no-print">
             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-600 opacity-10 blur-[100px] rounded-full"></div>
@@ -304,7 +320,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                   <div className="flex flex-col sm:flex-row gap-8 items-center">
                     <div>
                       <span className="block text-slate-500 text-[10px] font-black uppercase mb-1">{t.target}</span>
-                      <span className="text-3xl font-black">{userProfile.tdee} <span className="text-sm font-medium text-slate-500">kcal</span></span>
+                      <span className="text-3xl font-black">{safeTarget} <span className="text-sm font-medium text-slate-500">kcal</span></span>
                     </div>
                     <div className="w-px h-10 bg-slate-800 hidden sm:block"></div>
                     <div>
@@ -324,7 +340,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
               
               <div className="flex-shrink-0">
                 <div className="w-24 h-24 rounded-full border-8 border-slate-800 flex items-center justify-center relative">
-                   <div className="absolute inset-0 border-8 border-orange-500 rounded-full clip-path-active" style={{ clipPath: userProfile ? `inset(0 0 ${100 - (data.totalCalories/userProfile.tdee)*100}% 0)` : 'none' }}></div>
+                   <div className="absolute inset-0 border-8 border-orange-500 rounded-full clip-path-active" style={{ clipPath: userProfile ? `inset(0 0 ${100 - (safeTotalCalories/safeTarget)*100}% 0)` : 'none' }}></div>
                    <span className="text-3xl">⚖️</span>
                 </div>
               </div>
@@ -345,12 +361,12 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                 <div className="flex justify-between items-start mb-8 animate-in fade-in zoom-in-95 duration-500">
                   <div>
                     <p className="text-slate-400 dark:text-slate-500 text-[10px] font-extrabold uppercase tracking-[0.2em] mb-1">{t.auditSummary}</p>
-                    <h2 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">{data.totalCalories} <span className="text-xl font-medium text-slate-300 dark:text-slate-600">kcal</span></h2>
+                    <h2 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">{safeTotalCalories} <span className="text-xl font-medium text-slate-300 dark:text-slate-600">kcal</span></h2>
                   </div>
                   <div className="text-right">
                     <p className="text-slate-400 dark:text-slate-500 text-[10px] font-extrabold uppercase tracking-[0.2em] mb-1">{t.rating}</p>
                     <div className="flex items-center justify-end space-x-2">
-                      <span className={`text-5xl font-black ${data.healthRating > 7 ? 'text-green-500' : data.healthRating > 4 ? 'text-orange-500' : 'text-red-500'}`}>{data.healthRating}</span>
+                      <span className={`text-5xl font-black ${safeHealthRating > 7 ? 'text-green-500' : safeHealthRating > 4 ? 'text-orange-500' : 'text-red-500'}`}>{safeHealthRating}</span>
                       <span className="text-slate-200 dark:text-slate-700 font-bold text-2xl">/10</span>
                     </div>
                   </div>
@@ -402,8 +418,10 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                       <Pie data={chartData} cx="50%" cy="50%" innerRadius={80} outerRadius={105} paddingAngle={8} dataKey="value" stroke="none">
                         {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
-                      <Tooltip />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                      <Tooltip content={<CustomTooltip language={language} />} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(value) => (
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{String(value)}</span>
+                      )} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -425,7 +443,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
                       <div className="flex-grow min-w-0">
                         <div className="flex justify-between items-start mb-3 gap-2">
                           <span className="font-black text-xl sm:text-2xl leading-tight text-slate-900 dark:text-white">{getLocalized(item.name)}</span>
-                          <span className="text-sm font-black text-slate-400 bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-700 whitespace-nowrap">{item.calories} kcal</span>
+                          <span className="text-sm font-black text-slate-400 bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-700 whitespace-nowrap">{Number(item.calories) || 0} kcal</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-4 mb-4">
                           <span className="text-[11px] font-extrabold text-slate-500 uppercase bg-slate-200/50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl tracking-widest">{getLocalized(item.portion)}</span>
@@ -450,7 +468,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
               </div>
               <div className="traps-grid-fix grid grid-cols-1 md:grid-cols-3 gap-8">
                 {t.rejections.map((r, i) => {
-                  const [title, description] = r.split(': ');
+                  const [title, description] = String(r).split(': ');
                   return (
                     <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border-2 border-red-50 dark:border-red-900/20 shadow-xl transition-all hover:scale-[1.02]">
                       <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mb-6">
@@ -471,11 +489,11 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
           <div className="w-28 h-28 bg-orange-600 rounded-[2.5rem] flex items-center justify-center mb-10 shadow-2xl rotate-6 ring-8 ring-white/5">
             <span className="text-6xl">{hasFoodDetected ? '🍛' : '🔍'}</span>
           </div>
-          <h3 className="text-5xl font-black mb-8 tracking-tighter">{hasFoodDetected ? t.ready : t.invalidScan}</h3>
-          <p className="text-slate-400 mb-3 max-w-lg font-medium text-xl leading-relaxed">{hasFoodDetected ? t.zeroError : t.invalidScanSub}</p>
-          <p className="text-orange-400 font-black mb-12 max-w-md text-sm uppercase tracking-[0.3em]">{t.nextStep}</p>
+          <h3 className="text-5xl font-black mb-8 tracking-tighter">{hasFoodDetected ? String(t.ready) : String(t.invalidScan)}</h3>
+          <p className="text-slate-400 mb-3 max-w-lg font-medium text-xl leading-relaxed">{hasFoodDetected ? String(t.zeroError) : String(t.invalidScanSub)}</p>
+          <p className="text-orange-400 font-black mb-12 max-w-md text-sm uppercase tracking-[0.3em]">{String(t.nextStep)}</p>
           <button onClick={onReset} className="group relative bg-orange-600 hover:bg-orange-500 text-white px-20 py-7 rounded-[3rem] font-black text-xl transition-all transform hover:scale-105 active:scale-95 shadow-2xl shadow-orange-900/60 border-b-8 border-orange-800">
-            <span className="relative z-10">{t.btn}</span>
+            <span className="relative z-10">{String(t.btn)}</span>
             <div className="absolute inset-0 bg-white opacity-0 group-hover:btn:opacity-10 transition-opacity"></div>
           </button>
         </div>

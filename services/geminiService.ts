@@ -92,12 +92,12 @@ function saveToCache(key: string, data: NutritionAnalysis) {
 }
 
 export const analyzeFoodImage = async (base64Image: string, lang: Language): Promise<NutritionAnalysis> => {
-  const model = "gemini-3-flash-preview";
+  const model = "gemini-2.5-flash-image"; // Changed model to gemini-2.5-flash-image
   
   const refusalMessages = {
     en: "Content cannot be analyzed. This image does not contain edible food. NutryScan India only provides analysis for Indian and Bengali meals. Please scan a thali or meal.",
     bn: "বিশ্লেষণ করা সম্ভব নয়। এই ছবিতে কোনও খাবার নেই। NutryScan India শুধুমাত্র ভারতীয় এবং বাঙালি খাবারের বিশ্লেষণ প্রদান করে। আপনার থালি বা খাবারের ছবি স্ক্যান করুন।",
-    hi: "सामग्री का বিশ্লেষণ করা যাবে না। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का বিশ্লেষণ प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
+    hi: "সামগ্রী का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
   };
 
   const imageHash = await computeImageHash(base64Image);
@@ -133,7 +133,7 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
               - 'advice' MUST contain a message explaining that no food was found, localized for English, Bengali, and Hindi as follows:
                 en: "Content cannot be analyzed. This image does not contain edible food. NutryScan India only provides analysis for Indian and Bengali meals. Please scan a thali or meal."
                 bn: "বিশ্লেষণ করা সম্ভব নয়। এই ছবিতে কোনও খাবার নেই। NutryScan India শুধুমাত্র ভারতীয় এবং বাঙালি খাবারের বিশ্লেষণ প্রদান করে। আপনার থালি বা খাবারের ছবি স্ক্যান করুন।"
-                hi: "सामग्री का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
+                hi: "सामग्री का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाjali भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें."
 
             **FOOD ANALYSIS PROTOCOL (ONLY if food is clearly present):**
             1. Multilingual: Provide 'name', 'portion', 'notes', and 'advice' in 'en', 'bn', and 'hi'.
@@ -141,7 +141,10 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
             3. Invisible Oil: Account for oil soak in Bhaja, Luchi, Paratha, or curries.
             4. Portions: Estimate based on standard household thali dimensions.
             
-            Return JSON format strictly matching the provided schema.`
+            Return the JSON data for the nutrition analysis, ensuring it strictly matches the provided schema, and enclose it within a markdown code block like this:
+            \`\`\`json
+            { /* JSON content here */ }
+            \`\`\``
           },
           {
             inlineData: {
@@ -152,17 +155,23 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
         ]
       },
       config: {
-        responseMimeType: "application/json",
-        responseSchema: ANALYSIS_SCHEMA,
+        // responseMimeType and responseSchema are not supported by gemini-2.5-flash-image
         temperature: 0.0,
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("Empty response from AI model.");
+    const fullTextResponse = response.text;
+    if (!fullTextResponse) throw new Error("Empty response from AI model.");
     
+    // Extract JSON from markdown code block
+    const jsonMatch = fullTextResponse.match(/```json\n([\s\S]*?)\n```/);
+    if (!jsonMatch || !jsonMatch[1]) {
+      throw new Error("No valid JSON found in AI response.");
+    }
+    const jsonString = jsonMatch[1];
+
     try {
-      const analysisResult = JSON.parse(text) as NutritionAnalysis;
+      const analysisResult = JSON.parse(jsonString) as NutritionAnalysis;
       
       // Safety check: force zero if no items or if AI hallucinated values with 0 items
       if (!analysisResult.items || analysisResult.items.length === 0) {
@@ -181,6 +190,7 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
       saveToCache(cacheKey, analysisResult);
       return analysisResult;
     } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
       throw new Error("Invalid response format from AI. Please try again.");
     }
   } catch (apiError: any) {

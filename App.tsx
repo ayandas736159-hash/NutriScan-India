@@ -74,7 +74,6 @@ const App: React.FC = () => {
       stat2Sub: "Average Indian diet consists of refined carbs (ICMR)",
       stat3: "120kcal",
       stat3Sub: "Hidden calories in just 1 tbsp of Mustard Oil",
-      // Dynamic Loading Messages
       loadingSteps: [
         "Analyzing texture & density...",
         "Detecting oil absorption levels...",
@@ -157,7 +156,6 @@ const App: React.FC = () => {
   return (
     <Layout onLogoClick={reset}>
       <div className="max-w-6xl mx-auto">
-        {/* Profile Form Overlay */}
         {isProfileFormOpen && (
           <UserProfileForm 
             language={language} 
@@ -167,7 +165,6 @@ const App: React.FC = () => {
           />
         )}
 
-        {/* Language Switcher & Profile Button */}
         <div className="flex flex-col sm:flex-row justify-center items-center mb-10 gap-4 no-print">
           <div className="flex gap-2">
             {(['en', 'bn', 'hi'] as Language[]).map((l) => (
@@ -189,7 +186,7 @@ const App: React.FC = () => {
             onClick={() => setIsProfileFormOpen(true)}
             className="flex items-center gap-2 px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
           >
-            <span>👤</span> {userProfile ? userProfile.tdee + ' kcal' : t.setupProfile}
+            <span>👤</span> {userProfile ? String(userProfile.tdee) + ' kcal' : String(t.setupProfile)}
           </button>
         </div>
 
@@ -200,10 +197,10 @@ const App: React.FC = () => {
                 Scientifically Driven Nutrition
               </span>
               <h2 className="text-5xl sm:text-7xl font-black text-slate-900 dark:text-white mb-6 leading-[1.1] tracking-tighter">
-                {t.title} <span className="text-orange-600 italic block">Reveal the Truth.</span>
+                {String(t.title)} <span className="text-orange-600 italic block">Reveal the Truth.</span>
               </h2>
               <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-                {t.subtitle}
+                {String(t.subtitle)}
               </p>
             </div>
 
@@ -218,8 +215,8 @@ const App: React.FC = () => {
                   <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-4xl shadow-md transition-transform group-hover:scale-110`}>
                     {stat.icon}
                   </div>
-                  <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-2">{stat.val}</h3>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-bold leading-relaxed">{stat.sub}</p>
+                  <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-2">{String(stat.val)}</h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-bold leading-relaxed">{String(stat.sub)}</p>
                 </div>
               ))}
             </div>
@@ -231,7 +228,7 @@ const App: React.FC = () => {
               <div className="relative z-10">
                 <h3 className="text-2xl font-black mb-12 flex items-center justify-center text-center">
                   <span className="w-12 h-px bg-slate-800 mr-6"></span>
-                  {t.trapsTitle}
+                  {String(t.trapsTitle)}
                   <span className="w-12 h-px bg-slate-800 ml-6"></span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -239,22 +236,22 @@ const App: React.FC = () => {
                     <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform">
                       <span className="text-3xl">🍳</span>
                     </div>
-                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap1}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap1Sub}</p>
+                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{String(t.trap1)}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{String(t.trap1Sub)}</p>
                   </div>
                   <div className="text-center group border-y md:border-y-0 md:border-x border-slate-800 py-10 md:py-0 md:px-6">
                     <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform">
                       <span className="text-3xl">🥘</span>
                     </div>
-                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap2}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap2Sub}</p>
+                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{String(t.trap2)}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{String(t.trap2Sub)}</p>
                   </div>
                   <div className="text-center group">
                     <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700 shadow-xl transition-transform">
                       <span className="text-3xl">🥗</span>
                     </div>
-                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{t.trap3}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{t.trap3Sub}</p>
+                    <h4 className="font-black text-white text-lg mb-3 tracking-tight">{String(t.trap3)}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium px-4">{String(t.trap3Sub)}</p>
                   </div>
                 </div>
               </div>
@@ -264,67 +261,38 @@ const App: React.FC = () => {
 
         {status === AppStatus.LOADING && (
           <div className="flex flex-col items-center justify-center min-h-[70vh] text-center animate-in fade-in duration-700 py-12">
-            
-            {/* 
-               THE BIOMETRIC VISION CORE 
-               Designed for a high-tech "Medical Analysis" feel.
-            */}
             <div className="relative w-80 h-80 flex items-center justify-center mb-16">
-              
-              {/* 1. Radar Background Sweep */}
               <div className="absolute inset-0 rounded-full opacity-20 animate-radar bg-[conic-gradient(from_0deg,transparent_0_300deg,theme(colors.orange.500)_360deg)]"></div>
-              
-              {/* 2. Outer Static Interface Ring */}
               <div className="absolute inset-0 border border-slate-200 dark:border-slate-800 rounded-full opacity-30 scale-110"></div>
               <div className="absolute inset-0 border border-dashed border-slate-300 dark:border-slate-700 rounded-full opacity-40 animate-spin-slower"></div>
-
-              {/* 3. The Target Reticles (Corner Brackets) */}
               <div className="absolute w-64 h-64 pointer-events-none animate-pulse-fast">
-                {/* Top Left */}
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-500 rounded-tl-xl"></div>
-                {/* Top Right */}
                 <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-orange-500 rounded-tr-xl"></div>
-                {/* Bottom Right */}
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-orange-500 rounded-br-xl"></div>
-                {/* Bottom Left */}
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-orange-500 rounded-bl-xl"></div>
               </div>
-
-              {/* 4. Central Core Container */}
               <div className="relative z-10 w-48 h-48 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-orange-500/20 flex items-center justify-center overflow-hidden border-[6px] border-slate-100 dark:border-slate-800">
-                 
-                 {/* Food Object */}
                  <span className="text-7xl animate-float-cute relative z-10 filter drop-shadow-2xl">🍲</span>
-                 
-                 {/* 5. The High-Intensity Laser Scan */}
                  <div className="absolute inset-x-0 h-1 bg-orange-500 shadow-[0_0_20px_rgba(249,115,22,1)] animate-scan-laser z-20"></div>
                  <div className="absolute inset-x-0 h-16 bg-gradient-to-b from-orange-500/0 via-orange-500/20 to-orange-500/0 animate-scan-laser z-10" style={{animationDelay: '0.1s'}}></div>
-                 
-                 {/* Grid Overlay */}
                  <div className="absolute inset-0 bg-[linear-gradient(rgba(249,115,22,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.1)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
               </div>
-
-              {/* 6. Orbiting Data Points */}
               <div className="absolute w-[120%] h-[120%] animate-spin-reverse-slow opacity-60 pointer-events-none">
                  <div className="absolute top-0 left-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-[0_0_10px_theme(colors.orange.500)]"></div>
                  <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_theme(colors.blue.500)]"></div>
                  <div className="absolute top-1/2 right-0 w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_theme(colors.green.500)]"></div>
               </div>
-
             </div>
-
             <div className="relative z-10 max-w-lg mx-auto px-4">
               <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter mb-6">
                 Scanning Plate...
               </h2>
-              
-              {/* Dynamic Intelligent Status Bar */}
               <div className="bg-slate-100 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 p-1 rounded-full inline-flex items-center pr-6">
                 <div className="bg-orange-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full mr-3 animate-pulse">
                   AI Processing
                 </div>
                 <p className="text-slate-600 dark:text-slate-300 font-bold text-sm md:text-base tracking-wide min-w-[240px] text-left">
-                  {t.loadingSteps[loadingMessageIndex]}
+                  {String(t.loadingSteps[loadingMessageIndex] || "Auditing...")}
                 </p>
               </div>
             </div>
@@ -347,10 +315,10 @@ const App: React.FC = () => {
             <div className="w-28 h-28 bg-red-100 dark:bg-red-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl">
               <span className="text-6xl">🛑</span>
             </div>
-            <h2 className="text-4xl font-black text-red-900 dark:text-red-200 mb-4 tracking-tighter">{t.errorTitle}</h2>
-            <p className="text-red-700 dark:text-red-300 mb-12 text-xl font-medium max-w-md mx-auto">{t.errorMessage}</p>
+            <h2 className="text-4xl font-black text-red-900 dark:text-red-200 mb-4 tracking-tighter">{String(t.errorTitle)}</h2>
+            <p className="text-red-700 dark:text-red-300 mb-12 text-xl font-medium max-w-md mx-auto">{String(t.errorMessage)}</p>
             <button onClick={reset} className="px-12 py-6 bg-red-600 hover:bg-red-700 text-white font-black rounded-[2rem] text-lg transition-all shadow-xl shadow-red-200 dark:shadow-red-900/40 transform active:scale-95">
-              {t.retryButton}
+              {String(t.retryButton)}
             </button>
           </div>
         )}
