@@ -14,8 +14,12 @@ const TECH_QUOTES = [
   { text: "Simplicity is the soul of efficiency.", author: "Austin Freeman" },
   { text: "The best way to predict the future is to invent it.", author: "Alan Kay" },
   { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
-  { text: "The most disastrous thing that you can ever learn is your first programming language.", author: "Alan Kay" },
-  { text: "Programming is the art of telling another human being what one wants the computer to do.", author: "Donald Knuth" }
+  { text: "Programming is the art of telling another human being what one wants the computer to do.", author: "Donald Knuth" },
+  { text: "Software is a great combination between artistry and engineering.", author: "Bill Gates" },
+  { text: "Optimism is an occupational hazard of programming: feedback is the treatment.", author: "Kent Beck" },
+  { text: "Measuring programming progress by lines of code is like measuring aircraft building progress by weight.", author: "Bill Gates" },
+  { text: "Every great developer you know got there by solving problems they were unqualified to solve until they actually did it.", author: "Patrick McKenzie" },
+  { text: "Computers are good at following instructions, but not at reading your mind.", author: "Donald Knuth" }
 ];
 
 const App: React.FC = () => {
@@ -66,7 +70,6 @@ const App: React.FC = () => {
       setStatus(AppStatus.SUCCESS);
     } catch (err: any) {
       console.error("Analysis failed:", err);
-      // Ensure we always show the specific error message to help debugging
       setError(err.message || "An unknown error occurred during scanning.");
       setStatus(AppStatus.ERROR);
     }
@@ -96,7 +99,7 @@ const App: React.FC = () => {
         "Finalizing nutritional audit..."
       ],
       errorTitle: "Analysis Interrupted",
-      limitTitle: "Taking a breather...",
+      limitTitle: "Taking a Breather",
       limitSub: "The free tier limit has been reached. Please wait a minute while the AI cools down.",
       retryButton: "RETRY SCAN",
       setupProfile: "Setup My Health Profile"
@@ -265,38 +268,46 @@ const App: React.FC = () => {
         )}
 
         {status === AppStatus.ERROR && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 animate-in zoom-in duration-500">
-            <div className={`w-full max-w-2xl ${isLimitExceeded ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40'} border-4 rounded-[3.5rem] p-10 sm:p-16 text-center shadow-2xl relative overflow-hidden transition-colors duration-500`}>
+          <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 animate-in zoom-in-95 duration-700">
+            <div className={`w-full max-w-4xl border-2 sm:border-4 rounded-[4rem] p-8 sm:p-20 text-center shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] relative overflow-hidden transition-all duration-700 ${isLimitExceeded ? 'bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30' : 'bg-red-50/50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30'}`}>
               
-              {/* Background Accent */}
-              <div className={`absolute -top-20 -right-20 w-64 h-64 ${isLimitExceeded ? 'bg-orange-500' : 'bg-red-500'} opacity-10 blur-[100px] rounded-full`}></div>
+              {/* Background Ambient Glows */}
+              <div className={`absolute top-0 left-1/4 w-96 h-96 ${isLimitExceeded ? 'bg-orange-500' : 'bg-red-500'} opacity-[0.03] blur-[120px] rounded-full`}></div>
+              <div className={`absolute bottom-0 right-1/4 w-96 h-96 ${isLimitExceeded ? 'bg-orange-600' : 'bg-red-600'} opacity-[0.03] blur-[120px] rounded-full`}></div>
 
-              <div className={`w-24 h-24 ${isLimitExceeded ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600' : 'bg-red-100 dark:bg-red-900/30 text-red-600'} rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-lg group hover:scale-110 transition-transform duration-500`}>
-                <span className="text-5xl">{isLimitExceeded ? '⏳' : '🛑'}</span>
+              <div className={`w-28 h-28 ${isLimitExceeded ? 'bg-orange-500 shadow-orange-500/20' : 'bg-red-500 shadow-red-500/20'} rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-2xl transition-transform hover:scale-110 duration-500 relative group`}>
+                <span className="text-5xl group-hover:animate-bounce">{isLimitExceeded ? '⏳' : '🛑'}</span>
               </div>
 
-              <h2 className={`text-4xl font-black ${isLimitExceeded ? 'text-orange-900 dark:text-orange-200' : 'text-red-900 dark:text-red-200'} mb-4 tracking-tighter`}>
+              <h2 className={`text-4xl sm:text-6xl font-black ${isLimitExceeded ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400'} mb-6 tracking-tighter leading-none`}>
                 {isLimitExceeded ? String(t.limitTitle) : String(t.errorTitle)}
               </h2>
 
-              <p className={`text-lg font-medium ${isLimitExceeded ? 'text-orange-800/70 dark:text-orange-400/70' : 'text-red-800/70 dark:text-red-400/70'} mb-12 max-w-md mx-auto leading-relaxed`}>
-                {isLimitExceeded ? String(t.limitSub) : (error?.includes(":") ? error.split(":")[1] : error)}
+              <p className={`text-lg sm:text-xl font-medium ${isLimitExceeded ? 'text-orange-800/60 dark:text-orange-400/60' : 'text-red-800/60 dark:text-red-400/60'} mb-16 max-w-xl mx-auto leading-relaxed`}>
+                {isLimitExceeded ? String(t.limitSub) : (error?.includes(":") ? error.split(":")[1].trim() : error)}
               </p>
 
-              {/* Random Tech Quote Section */}
-              <div className="relative mb-12 py-8 px-6 bg-white/40 dark:bg-black/20 rounded-[2rem] border border-white/20 dark:border-white/5 backdrop-blur-sm animate-pulse-fast">
-                <svg className="absolute -top-3 -left-2 w-8 h-8 text-orange-500/20" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8v8h6v-8h-6zM22 8v8h6v-8h-6zM10 18v8h6v-8h-6zM22 18v8h6v-8h-6z"/></svg>
-                <p className="text-slate-700 dark:text-slate-300 italic font-bold text-lg mb-4 leading-relaxed">
-                  "{randomQuote.text}"
+              {/* Enhanced Quote Section */}
+              <div className="relative mb-16 py-12 px-8 bg-white dark:bg-black/40 rounded-[3rem] border border-slate-200/50 dark:border-white/10 shadow-inner group transition-all hover:shadow-2xl animate-float-cute">
+                {/* Decorative Quotes */}
+                <span className="absolute top-6 left-8 text-8xl font-serif text-orange-500/10 dark:text-orange-500/5 pointer-events-none">“</span>
+                <span className="absolute bottom-[-10px] right-8 text-8xl font-serif text-orange-500/10 dark:text-orange-500/5 pointer-events-none">”</span>
+                
+                <p className="text-xl sm:text-2xl text-slate-800 dark:text-slate-100 italic font-bold mb-6 leading-relaxed relative z-10 px-4">
+                  {randomQuote.text}
                 </p>
-                <p className="text-orange-600 dark:text-orange-400 text-xs font-black uppercase tracking-widest">
-                  — {randomQuote.author}
-                </p>
+                <div className="flex items-center justify-center space-x-3">
+                   <div className="h-px w-8 bg-orange-500/30"></div>
+                   <p className="text-orange-600 dark:text-orange-500 text-[11px] font-black uppercase tracking-[0.4em]">
+                     {randomQuote.author}
+                   </p>
+                   <div className="h-px w-8 bg-orange-500/30"></div>
+                </div>
               </div>
 
               <button 
                 onClick={reset} 
-                className={`w-full sm:w-auto px-12 py-6 ${isLimitExceeded ? 'bg-orange-600 border-orange-800 shadow-orange-900/20' : 'bg-red-600 border-red-800 shadow-red-900/20'} border-b-8 text-white font-black rounded-3xl text-xl transition-all transform hover:scale-105 active:scale-95 shadow-xl`}
+                className={`w-full sm:w-auto px-16 py-7 text-white font-black rounded-[2.5rem] text-xl transition-all transform hover:scale-105 active:scale-95 shadow-2xl ${isLimitExceeded ? 'bg-orange-600 border-orange-800 shadow-orange-900/40 hover:bg-orange-500' : 'bg-red-600 border-red-800 shadow-red-900/40 hover:bg-red-500'} border-b-8`}
               >
                 {String(t.retryButton)}
               </button>
