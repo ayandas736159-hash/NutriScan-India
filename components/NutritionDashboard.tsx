@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { NutritionAnalysis, Language, LocalizedText, UserProfile } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
@@ -23,12 +24,13 @@ const CustomTooltip = ({ active, payload, label, language }: { active?: boolean;
     const translations = {
       en: "Gram",
       bn: "গ্রাম",
-      hi: "ग्राम"
+      hi: "ग्राम",
+      as: "গ্ৰাম"
     }
 
     return (
       <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
-        <p className="text-sm font-bold text-slate-900 dark:text-white">{`${name}: ${value}${translations[language]}`}</p>
+        <p className="text-sm font-bold text-slate-900 dark:text-white">{`${name}: ${value} ${translations[language]}`}</p>
       </div>
     );
   }
@@ -46,8 +48,8 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
     if (typeof content === 'string') return content;
     if (content && typeof content === 'object') {
       // If it has our expected keys, return the localized string
-      if ('en' in content || 'bn' in content || 'hi' in content) {
-        const val = content[language] || content['en'] || content['bn'] || content['hi'] || '';
+      if ('en' in content || 'bn' in content || 'hi' in content || 'as' in content) {
+        const val = content[language] || content['en'] || content['bn'] || content['hi'] || content['as'] || '';
         return typeof val === 'string' ? val : JSON.stringify(val);
       }
       // If it's a different object, return empty or string representation
@@ -60,9 +62,21 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
   const hasFoodDetected = data && data.items && data.items.length > 0 && Number(data.totalCalories) > 0;
 
   const chartData = [
-    { name: language === 'bn' ? 'প্রোটিন' : language === 'hi' ? 'प्रोटीन' : 'Protein', value: Number(data.totalProtein) || 0, color: '#22c55e' },
-    { name: language === 'bn' ? 'কার্বোহাইড্রেট' : language === 'hi' ? 'কার্বস' : 'Carbs', value: Number(data.totalCarbs) || 0, color: '#3b82f6' },
-    { name: language === 'bn' ? 'ফ্যাট' : language === 'hi' ? 'ফ্যাট' : 'Fats', value: Number(data.totalFats) || 0, color: '#f59e0b' },
+    { 
+      name: (language === 'bn' ? 'প্রোটিন' : language === 'hi' ? 'प्रोटीन' : language === 'as' ? 'প্ৰটিন' : 'Protein') + ' 🍗', 
+      value: Number(data.totalProtein) || 0, 
+      color: '#22c55e' 
+    },
+    { 
+      name: (language === 'bn' ? 'কার্বোহাইড্রেট' : language === 'hi' ? 'कार्ब्स' : language === 'as' ? 'কাৰ্বহাইড্ৰেট' : 'Carbs') + ' 🌾', 
+      value: Number(data.totalCarbs) || 0, 
+      color: '#3b82f6' 
+    },
+    { 
+      name: (language === 'bn' ? 'ফ্যাট' : language === 'hi' ? 'फैट' : language === 'as' ? 'স্নেহ পদাৰ্থ' : 'Fats') + ' 🥑', 
+      value: Number(data.totalFats) || 0, 
+      color: '#f59e0b' 
+    },
   ];
 
   const safeTarget = userProfile ? Number(userProfile.tdee) : 2000;
@@ -97,7 +111,8 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       dailyBalance: "Daily Calorie Balance",
       target: "Daily Goal",
       remaining: "Remaining After This Meal",
-      personalize: "Personalize My Goals"
+      personalize: "Personalize My Goals",
+      macronutrientTitle: "Macronutrient Balance"
     },
     bn: {
       nextStep: "পরবর্তী ধাপ? আপনার খাবারের অভ্যাসের আসল প্যাটার্ন বুঝতে সাহায্য করবে এই ট্র্যাক।",
@@ -126,7 +141,8 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       dailyBalance: "দৈনিক ক্যালরি ব্যালেন্স",
       target: "দৈনিক লক্ষ্য",
       remaining: "এই খাবারের পর বাকি",
-      personalize: "লক্ষ্য নির্ধারণ করুন"
+      personalize: "লক্ষ্য নির্ধারণ করুন",
+      macronutrientTitle: "ম্যাক্রোনিউট্রিয়েন্ট ব্যালেন্স"
     },
     hi: {
       nextStep: "आगे क्या? अपनी सेहत सुधारने के लिए अपने खान-पान को ट्रैक करते रहें।",
@@ -137,7 +153,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       rejections: [
         "ऑयल सोक: तले हुए खाद्य पदार्थ या तैलीय करी में अक्सर अतिरिक्त वसा होती है, जो वजन घटाने के प्रयासों में बाधा डालती है।",
         "चावल की अधिकता: प्रोटीन और चावल का असंतुलित अनुपात ऊर्जा में गिरावट और शुगर स्पाइक्स का कारण बन सकता है।",
-        "प्रोटीन की कमी: कई भारतीय आहारों में आवश्यक प्रोटीन की कमी होती है, जो मांसपेशियों और समग्र स्वास्थ्य को प्रभावित करता है।"
+        "प्रोटीन की कमी: कई भारतीय आहारों में आवश्यक प्रोटीन की कमी होती है, जो मांसपेशियों और समग्र स्वास्थ्य को प्रभावित करता है।",
       ],
       checklistTitle: "🍱 भोजन का विवरण",
       auditSummary: "असली कैलोरी",
@@ -152,10 +168,41 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       pdfFileNamePrefix: "NutryScan_Honest_Report",
       invalidScan: "अमान्य स्कैन",
       invalidScanSub: "हम इस तस्वीर में किसी भी भोजन का पता नहीं लगा सके। कृपया अपनी थाली या भोजन की स्पष्ट तस्वीर स्कैन करें।",
-      dailyBalance: "দৈনিক ক্যালরি ব্যালেন্স",
+      dailyBalance: "दैनिक कैलोरी बैलेंस",
       target: "दैनिक लक्ष्य",
       remaining: "इस भोजन के बाद शेष",
-      personalize: "लक्ष्य निर्धारित करें"
+      personalize: "लक्ष्य निर्धारित करें",
+      macronutrientTitle: "मैक्रोन्यूट्रिएंट बैलेंस"
+    },
+    as: {
+      nextStep: "পৰৱৰ্তী পদক্ষেপ? আপোনাৰ স্বাস্থ্যৰ অধিক উন্নতিৰ বাবে আপোনাৰ খাদ্যৰ ওপৰত চকু ৰাখক।",
+      ready: "আচল সত্যটো উন্মোচন হ'ল!",
+      zeroError: "আপোনাৰ খাদ্যৰ এক সঠিক স্কেন তলত দিয়া হৈছে।",
+      btn: "অন্য খাদ্য পৰীক্ষা কৰক",
+      rejectionTitle: "সাধাৰণ ঘৰুৱা ভুলসমূহ",
+      rejections: [
+        "তেলৰ পৰিমাণ: ভজা খাদ্যত প্ৰায়ে অতিৰিক্ত চৰ্বি থাকে, যিয়ে ওজন কমোৱাত বাধা দিয়ে।",
+        "কাৰ্বহাইড্ৰেটৰ আধিক্য: প্ৰটিনতকৈ বেছি পৰিমাণে ভাত খালে শৰীৰৰ শক্তি হ্ৰাস পাব পাৰে।",
+        "প্ৰটিনৰ অভাৱ: ভাৰতীয় খাদ্যত প্ৰায়ে প্ৰটিনৰ অভাৱ দেখা যায়, যিয়ে পেশীৰ ক্ষতি কৰিব পাৰে।"
+      ],
+      checklistTitle: "🍱 আপোনাৰ পাতত কি আছে",
+      auditSummary: "আচল কেলৰি",
+      rating: "স্বাস্থ্য স্ক'ৰ",
+      generating: "ৰিপৰ্ট তৈয়াৰ কৰা হৈছে...",
+      generatingSub: "উচ্চমানৰ পিডিএফ ৰিপৰ্ট তৈয়াৰ কৰা হৈছে...",
+      reportTitle: "NutryScan India - খাদ্য বিশ্লেষণ ৰিপৰ্ট",
+      mealPhoto: "স্কেন কৰা খাদ্যৰ ফটো",
+      btnScanNew: "নতুনকৈ স্কেন কৰক",
+      btnSavePdf: "পিডিএফ হিচাপে সংৰক্ষণ কৰক",
+      pdfGeneratedPrefix: "তৈয়াৰ কৰা হৈছে",
+      pdfFileNamePrefix: "NutryScan_Honest_Report",
+      invalidScan: "অবৈধ স্কেন",
+      invalidScanSub: "এইখন ছবিত আমি কোনো খাদ্য চিনাক্ত কৰিব নোৱাৰিলোঁ। অনুগ্ৰহ কৰি এখন পৰিষ্কাৰ ফটো স্কেন কৰক।",
+      dailyBalance: "দৈনিক কেলৰিৰ স্থিতি",
+      target: "দৈনিক লক্ষ্য",
+      remaining: "এই খাদ্যৰ পাছত অৱশিষ্ট কেলৰি",
+      personalize: "লক্ষ্য স্থিৰ কৰক",
+      macronutrientTitle: "মেক্ৰ'নিউত্ৰিয়েণ্টৰ ভাৰসাম্য"
     }
   };
 
@@ -410,7 +457,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
               <div className="chart-card-container bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 min-h-[450px]">
                 <h3 className="text-sm font-black text-slate-900 dark:text-white mb-10 uppercase tracking-widest flex items-center border-b border-slate-50 dark:border-slate-800 pb-4">
                   <span className="w-3 h-3 bg-orange-600 rounded-full mr-3 shadow-lg shadow-orange-100"></span>
-                  Macronutrient Balance
+                  {t.macronutrientTitle}
                 </h3>
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">

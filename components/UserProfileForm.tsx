@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserProfile, Language, ActivityLevel } from '../types';
 
@@ -88,6 +89,23 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ onSave, language, ini
       act_moderately: "मध्यम सक्रिय (3-5 दिन व्यायाम)",
       act_very: "बहुत सक्रिय (6-7 दिन कठिन व्यायाम)",
       act_extra: "अत्यधिक सक्रिय (शारीरिक श्रम वाला काम)",
+    },
+    as: {
+      title: "দৈনিক লক্ষ্য স্থিৰ কৰক",
+      sub: "আপোনাৰ আজিৰ বাবে কিমান কেলৰি বাকী আছে সেয়া জানিবলৈ আমাক এই তথ্যবোৰৰ প্ৰয়োজন।",
+      age: "বয়স",
+      gender: "লিংগ",
+      male: "পুৰুষ",
+      female: "মহিলা",
+      weight: "ওজন (কেজি)",
+      height: "উচ্চতা (চেমি)",
+      activity: "গতিবিধিৰ স্তৰ",
+      save: "প্ৰফাইল সংৰক্ষণ কৰক",
+      act_sedentary: "কম সক্ৰিয় (অফিচৰ কাম, কম ব্যায়াম)",
+      act_lightly: "সামান্য সক্ৰিয় (১-৩ দিন ব্যায়াম)",
+      act_moderately: "মধ্যমীয়া সক্ৰিয় (৩-৫ দিন ব্যায়াম)",
+      act_very: "অধিক সক্ৰিয় (৬-৭ দিন কঠিন ব্যায়াম)",
+      act_extra: "অত্যধিক সক্ৰিয় (শাৰীৰিক শ্ৰমৰ কাম)",
     }
   };
 

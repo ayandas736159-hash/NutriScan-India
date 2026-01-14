@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Language } from '../types';
 
@@ -72,10 +73,20 @@ const Scanner: React.FC<ScannerProps> = ({ onImageCaptured, isLoading, language 
       sub: "अपने भोजन में छिपे हुए तेल और कार्ब असंतुलन का पता लगाने के लिए Honest Check शुरू करें।",
       btnCamera: "फोटो लें",
       btnGallery: "गैलरी से अपलोड",
-      scanning: "স্ক্যান হচ্ছে...",
+      scanning: "स्कैन हो रहा है...",
       dragText: "या अपनी फोटो यहां खींचें",
       permissionDenied: "कैमरा एक्सेस ब्लॉक है",
       permissionInstruction: "कृपया अपने ब्राउज़र के एड्रेस बार में लॉक आइकन पर क्लिक करें और भोजन स्कैन करने के लिए 'Camera' सक्षम करें।"
+    },
+    as: {
+      snap: "আপোনাৰ পাত পৰীক্ষা কৰক",
+      sub: "আপোনাৰ খাদ্যত থকা অতিৰিক্ত তেল আৰু কেলৰি জানিবলৈ এক Honest Check আৰম্ভ কৰক।",
+      btnCamera: "ফটো তোলক",
+      btnGallery: "ফটো আপলোড কৰক",
+      scanning: "স্কেন হৈ আছে...",
+      dragText: "অথবা ফটোখন ইয়ালৈ ড্ৰেগ কৰক",
+      permissionDenied: "কেমেৰা এক্সেছ নাই",
+      permissionInstruction: "অনুগ্ৰহ কৰি আপোনাৰ ব্ৰাউজাৰৰ লক আইকনত ক্লিক কৰি 'Camera' সক্ৰিয় কৰক।"
     }
   };
 

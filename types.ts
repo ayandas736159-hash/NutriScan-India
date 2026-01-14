@@ -1,4 +1,5 @@
-export type Language = 'en' | 'bn' | 'hi';
+
+export type Language = 'en' | 'bn' | 'hi' | 'as';
 
 export type VerificationStatus = 'PASS' | 'FAIL' | 'WARNING';
 
@@ -17,6 +18,7 @@ export interface LocalizedText {
   en: string;
   bn: string;
   hi: string;
+  as: string;
 }
 
 export interface FoodItem {

@@ -120,6 +120,25 @@ const App: React.FC = () => {
       errorTitle: "विश्लेषण बाधित",
       retryButton: "पुनः स्कैन करें",
       setupProfile: "हेल्थ प्रोफाइल सेटअप करें"
+    },
+    as: {
+      title: "ঘৰৰ খাদ্যই সদায় স্বাস্থ্যকৰ নহয়।",
+      subtitle: "বেছিভাগ ভাৰতীয় ঘৰুৱা খাদ্যত কেলৰি আৰু কাৰ্বহাইড্ৰেটৰ পৰিমাণ বেছি থাকে। ICMR নিৰ্দেশনা অনুসৰি আপোনাৰ খাদ্যৰ এক সঠিক অডিট লওক।",
+      stat1: "৪ জনত ১ জন",
+      stat1Sub: "ভাৰতীয় প্ৰাপ্তবয়স্ক এতিয়া অস্বাস্থ্যকৰ জীৱনশৈলীৰ চিকাৰ (NFHS-5)",
+      stat2: "৭০%",
+      stat2Sub: "গড় ভাৰতীয় খাদ্যত কেৱল পৰিশোধিত কাৰ্বহাইড্ৰেট থাকে (ICMR)",
+      stat3: "১২০ kcal",
+      stat3Sub: "মাত্ৰ ১ চামুচ সৰিয়হৰ তেলত লুকাই থকা কেলৰি",
+      loadingSteps: [
+        "খাদ্যৰ ঘনত্ব বিশ্লেষণ কৰা হৈছে...",
+        "তেলৰ পৰিমাণ জোখা হৈছে...",
+        "কাৰ্বহাইড্ৰেটৰ অনুপাত নিৰ্ণয় কৰা হৈছে...",
+        "পুষ্টিৰ অডিট চূড়ান্ত কৰা হৈছে..."
+      ],
+      errorTitle: "বিশ্লেষণ বাধাপ্ৰাপ্ত",
+      retryButton: "পুনৰ স্কেন কৰক",
+      setupProfile: "স্বাস্থ্য প্ৰফাইল ঠিক কৰক"
     }
   };
 
@@ -138,8 +157,8 @@ const App: React.FC = () => {
         )}
 
         <div className="flex flex-col sm:flex-row justify-center items-center mb-10 gap-4 no-print">
-          <div className="flex gap-2">
-            {(['en', 'bn', 'hi'] as Language[]).map((l) => (
+          <div className="flex gap-2 flex-wrap justify-center">
+            {(['en', 'bn', 'hi', 'as'] as Language[]).map((l) => (
               <button
                 key={l}
                 onClick={() => setLanguage(l)}
@@ -149,7 +168,7 @@ const App: React.FC = () => {
                     : 'bg-white dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
                 }`}
               >
-                {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : 'हिन्दी'}
+                {l === 'en' ? 'English' : l === 'bn' ? 'বাংলা' : l === 'hi' ? 'हिन्दी' : 'অসমীয়া'}
               </button>
             ))}
           </div>

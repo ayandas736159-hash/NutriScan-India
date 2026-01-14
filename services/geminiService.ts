@@ -16,9 +16,10 @@ const LOCALIZED_STRING_SCHEMA = {
   properties: {
     en: { type: Type.STRING },
     bn: { type: Type.STRING },
-    hi: { type: Type.STRING }
+    hi: { type: Type.STRING },
+    as: { type: Type.STRING }
   },
-  required: ["en", "bn", "hi"]
+  required: ["en", "bn", "hi", "as"]
 };
 
 const ANALYSIS_SCHEMA = {
@@ -51,7 +52,7 @@ const ANALYSIS_SCHEMA = {
   required: ["items", "totalCalories", "totalProtein", "totalCarbs", "totalFats", "healthRating", "advice"]
 };
 
-const NUTRITION_CACHE_PREFIX = 'nutryscan_v7_';
+const NUTRITION_CACHE_PREFIX = 'nutryscan_v8_';
 
 async function computeImageHash(base64: string): Promise<string> {
   try {
@@ -66,8 +67,8 @@ async function computeImageHash(base64: string): Promise<string> {
 }
 
 export const analyzeFoodImage = async (base64Image: string, lang: Language): Promise<NutritionAnalysis> => {
-  // Switched to gemini-3-flash-preview as requested to avoid quota exhaustion.
-  const model = "gemini-3-flash-preview"; 
+  // Ensuring gemini-flash-latest is used for all analysis tasks.
+  const model = "gemini-flash-latest"; 
 
   const imageHash = await computeImageHash(base64Image);
   const cacheKey = NUTRITION_CACHE_PREFIX + imageHash;
@@ -96,16 +97,17 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
               }
             },
             {
-              text: `Act as a specialized Bengali & Indian Nutritionist. 
-              Image Context: Bengali Household Thali / Indian Street Food.
+              text: `Act as a specialized Bengali, Assamese & Indian Nutritionist. 
+              Image Context: Indian Household Thali / Street Food.
               
               Identify every item on the plate. Estimate calories precisely.
               Note hidden calories: 
-              - Oil soak in "Alu Bhaja" or "Beguni".
+              - Oil soak in "Bhaja" or fried items.
               - Sugar in "Chutney" or "Mishti".
-              - Refined carb density in white rice/maida roti.
+              - Refined carb density in white rice/roti.
               
-              Provide 'name', 'portion', 'notes', and 'advice' in 'en', 'bn', and 'hi'.
+              Provide 'name', 'portion', 'notes', and 'advice' in 'en', 'bn', 'hi', and 'as'.
+              Ensure accurate Assamese names for items (e.g., 'Masor Tenga', 'Alu Pitika').
               If no food is detected, return empty items list and 0 calories.`
             }
           ]
