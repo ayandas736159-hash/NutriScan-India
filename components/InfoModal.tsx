@@ -195,10 +195,12 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
 
         {/* Footer Links */}
         <div className="flex flex-col items-center space-y-4 pt-6 border-t border-slate-800">
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-wrap justify-center items-center gap-6">
             <button onClick={() => setView('privacy')} className="text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-white transition-colors">Privacy Policy</button>
             <span className="text-slate-800">•</span>
             <button onClick={() => setView('terms')} className="text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-white transition-colors">Terms of Service</button>
+            <span className="text-slate-800">•</span>
+            <a href="https://forms.gle/izxGaxYqRjEuSguR8" target="_blank" rel="noopener noreferrer" className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:text-orange-400 transition-colors">Feedback & Support</a>
           </div>
           <p className="text-slate-600 text-[9px] font-bold uppercase tracking-tight">Provided "AS-IS" without warranty of any kind.</p>
         </div>
