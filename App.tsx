@@ -1,11 +1,22 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Layout from './components/Layout';
 import Scanner from './components/Scanner';
 import NutritionDashboard from './components/NutritionDashboard';
 import UserProfileForm from './components/UserProfileForm';
 import { AppStatus, NutritionAnalysis, Language, UserProfile } from './types';
 import { analyzeFoodImage } from './services/geminiService';
+
+const TECH_QUOTES = [
+  { text: "Talk is cheap. Show me the code.", author: "Linus Torvalds" },
+  { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
+  { text: "Make it work, make it right, make it fast.", author: "Kent Beck" },
+  { text: "Simplicity is the soul of efficiency.", author: "Austin Freeman" },
+  { text: "The best way to predict the future is to invent it.", author: "Alan Kay" },
+  { text: "Code is like humor. When you have to explain it, it’s bad.", author: "Cory House" },
+  { text: "The most disastrous thing that you can ever learn is your first programming language.", author: "Alan Kay" },
+  { text: "Programming is the art of telling another human being what one wants the computer to do.", author: "Donald Knuth" }
+];
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<AppStatus>(AppStatus.IDLE);
@@ -16,6 +27,11 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isProfileFormOpen, setIsProfileFormOpen] = useState(false);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Pick a random quote only when error occurs
+  const randomQuote = useMemo(() => {
+    return TECH_QUOTES[Math.floor(Math.random() * TECH_QUOTES.length)];
+  }, [error]);
 
   useEffect(() => {
     const saved = localStorage.getItem('nutryscan_profile');
@@ -80,6 +96,8 @@ const App: React.FC = () => {
         "Finalizing nutritional audit..."
       ],
       errorTitle: "Analysis Interrupted",
+      limitTitle: "Taking a breather...",
+      limitSub: "The free tier limit has been reached. Please wait a minute while the AI cools down.",
       retryButton: "RETRY SCAN",
       setupProfile: "Setup My Health Profile"
     },
@@ -99,6 +117,8 @@ const App: React.FC = () => {
         "পুষ্টির অডিট চূড়ান্ত করা হচ্ছে..."
       ],
       errorTitle: "বিশ্লেষণ বাধাপ্রাপ্ত",
+      limitTitle: "একটু বিরতি...",
+      limitSub: "ফ্রি টিয়ারের সীমা শেষ হয়েছে। অনুগ্রহ করে এক মিনিট অপেক্ষা করুন।",
       retryButton: "পুনরায় স্ক্যান করুন",
       setupProfile: "স্বাস্থ্য প্রোফাইল সেট আপ করুন"
     },
@@ -118,6 +138,8 @@ const App: React.FC = () => {
         "पोषण ऑडिट को अंतिम रूप दिया जा रहा है..."
       ],
       errorTitle: "विश्लेषण बाधित",
+      limitTitle: "थोड़ा विश्राम...",
+      limitSub: "मुफ्त सीमा समाप्त हो गई है। कृपया एक मिनट प्रतीक्षा करें।",
       retryButton: "पुनः स्कैन करें",
       setupProfile: "हेल्थ प्रोफाइल सेटअप करें"
     },
@@ -137,12 +159,15 @@ const App: React.FC = () => {
         "পুষ্টিৰ অডিট চূড়ান্ত কৰা হৈছে..."
       ],
       errorTitle: "বিশ্লেষণ বাধাপ্ৰাপ্ত",
+      limitTitle: "অলপ বিৰতি...",
+      limitSub: "বিনামূলীয়া সীমা শেষ হৈছে। অনুগ্ৰহ কৰি এ মিনিটমান ৰৈ দিয়ক।",
       retryButton: "পুনৰ স্কেন কৰক",
       setupProfile: "স্বাস্থ্য প্ৰফাইল ঠিক কৰক"
     }
   };
 
   const t = translations[language];
+  const isLimitExceeded = error?.includes("LIMIT_EXCEEDED");
 
   return (
     <Layout onLogoClick={reset}>
@@ -240,22 +265,42 @@ const App: React.FC = () => {
         )}
 
         {status === AppStatus.ERROR && (
-          <div className="bg-red-50 dark:bg-red-900/10 border-4 border-red-100 dark:border-red-900/30 rounded-[3rem] p-12 text-center animate-in zoom-in duration-300">
-            <div className="w-24 h-24 bg-red-100 dark:bg-red-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
-              <span className="text-5xl">🛑</span>
-            </div>
-            <h2 className="text-3xl font-black text-red-900 dark:text-red-200 mb-4 tracking-tighter">{String(t.errorTitle)}</h2>
-            
-            {/* Displaying specific error message for debugging */}
-            <div className="bg-white dark:bg-slate-800/50 p-6 rounded-2xl mb-10 max-w-lg mx-auto border border-red-200 dark:border-red-900/40">
-              <p className="text-red-700 dark:text-red-300 text-sm font-mono leading-relaxed text-left">
-                {error}
-              </p>
-            </div>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 animate-in zoom-in duration-500">
+            <div className={`w-full max-w-2xl ${isLimitExceeded ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40'} border-4 rounded-[3.5rem] p-10 sm:p-16 text-center shadow-2xl relative overflow-hidden transition-colors duration-500`}>
+              
+              {/* Background Accent */}
+              <div className={`absolute -top-20 -right-20 w-64 h-64 ${isLimitExceeded ? 'bg-orange-500' : 'bg-red-500'} opacity-10 blur-[100px] rounded-full`}></div>
 
-            <button onClick={reset} className="px-10 py-5 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl text-lg transition-all shadow-xl active:scale-95">
-              {String(t.retryButton)}
-            </button>
+              <div className={`w-24 h-24 ${isLimitExceeded ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600' : 'bg-red-100 dark:bg-red-900/30 text-red-600'} rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-lg group hover:scale-110 transition-transform duration-500`}>
+                <span className="text-5xl">{isLimitExceeded ? '⏳' : '🛑'}</span>
+              </div>
+
+              <h2 className={`text-4xl font-black ${isLimitExceeded ? 'text-orange-900 dark:text-orange-200' : 'text-red-900 dark:text-red-200'} mb-4 tracking-tighter`}>
+                {isLimitExceeded ? String(t.limitTitle) : String(t.errorTitle)}
+              </h2>
+
+              <p className={`text-lg font-medium ${isLimitExceeded ? 'text-orange-800/70 dark:text-orange-400/70' : 'text-red-800/70 dark:text-red-400/70'} mb-12 max-w-md mx-auto leading-relaxed`}>
+                {isLimitExceeded ? String(t.limitSub) : (error?.includes(":") ? error.split(":")[1] : error)}
+              </p>
+
+              {/* Random Tech Quote Section */}
+              <div className="relative mb-12 py-8 px-6 bg-white/40 dark:bg-black/20 rounded-[2rem] border border-white/20 dark:border-white/5 backdrop-blur-sm animate-pulse-fast">
+                <svg className="absolute -top-3 -left-2 w-8 h-8 text-orange-500/20" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8v8h6v-8h-6zM22 8v8h6v-8h-6zM10 18v8h6v-8h-6zM22 18v8h6v-8h-6z"/></svg>
+                <p className="text-slate-700 dark:text-slate-300 italic font-bold text-lg mb-4 leading-relaxed">
+                  "{randomQuote.text}"
+                </p>
+                <p className="text-orange-600 dark:text-orange-400 text-xs font-black uppercase tracking-widest">
+                  — {randomQuote.author}
+                </p>
+              </div>
+
+              <button 
+                onClick={reset} 
+                className={`w-full sm:w-auto px-12 py-6 ${isLimitExceeded ? 'bg-orange-600 border-orange-800 shadow-orange-900/20' : 'bg-red-600 border-red-800 shadow-red-900/20'} border-b-8 text-white font-black rounded-3xl text-xl transition-all transform hover:scale-105 active:scale-95 shadow-xl`}
+              >
+                {String(t.retryButton)}
+              </button>
+            </div>
           </div>
         )}
       </div>
