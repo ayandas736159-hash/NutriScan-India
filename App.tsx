@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>('en');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isProfileFormOpen, setIsProfileFormOpen] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem('nutryscan_profile');
@@ -21,6 +22,18 @@ const App: React.FC = () => {
       setUserProfile(JSON.parse(saved));
     }
   }, []);
+
+  // Cycle loading messages for a "smart" feel
+  useEffect(() => {
+    if (status === AppStatus.LOADING) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % 4);
+      }, 1500); // Change message every 1.5s
+      return () => clearInterval(interval);
+    } else {
+      setLoadingMessageIndex(0);
+    }
+  }, [status]);
 
   const handleSaveProfile = (profile: UserProfile) => {
     setUserProfile(profile);
@@ -61,8 +74,13 @@ const App: React.FC = () => {
       stat2Sub: "Average Indian diet consists of refined carbs (ICMR)",
       stat3: "120kcal",
       stat3Sub: "Hidden calories in just 1 tbsp of Mustard Oil",
-      loading: "Scanning Your Plate...",
-      loadingSub: "Calculating oil soak and the carb-to-protein balance.",
+      // Dynamic Loading Messages
+      loadingSteps: [
+        "Analyzing texture & density...",
+        "Detecting oil absorption levels...",
+        "Identifying carbohydrate ratio...",
+        "Finalizing nutritional audit..."
+      ],
       audit: "Real Meal Scan",
       trapsTitle: "Why Use NutryScan?",
       trap1: "The Oil Soak",
@@ -85,8 +103,12 @@ const App: React.FC = () => {
       stat2Sub: "গড় ভারতীয় ডায়েটে অতিরিক্ত কার্বোহাইড্রেট থাকে (ICMR)",
       stat3: "১২০ kcal",
       stat3Sub: "মাত্র ১ চামচ সরষের তেলে লুকানো ক্যালরি",
-      loading: "প্লেট স্ক্যান করা হচ্ছে...",
-      loadingSub: "তেলের পরিমাণ এবং কার্ব-প্রোটিন অনুপাত সঠিক ভাবে দেখা হচ্ছে।",
+      loadingSteps: [
+        "টেক্সচার এবং ঘনত্ব বিশ্লেষণ করা হচ্ছে...",
+        "তেল শোষণের মাত্রা দেখা হচ্ছে...",
+        "কার্বোহাইড্রেটের অনুপাত নির্ণয় করা হচ্ছে...",
+        "পুষ্টির অডিট চূড়ান্ত করা হচ্ছে..."
+      ],
       audit: "Real Meal স্ক্যান",
       trapsTitle: "কেন NutryScan ব্যবহার করবেন?",
       trap1: "তেল সোক",
@@ -109,8 +131,12 @@ const App: React.FC = () => {
       stat2Sub: "औसत भारतीय आहार में केवल रिफाइंड कार्ब्स होते हैं (ICMR)",
       stat3: "120kcal",
       stat3Sub: "केवल 1 चम्मच सरसों के तेल में छिपी कैलोरी",
-      loading: "थाली स्कैन हो रही है...",
-      loadingSub: "तेल और कार्ब-प्रोटीन के संतुलन की पहचान की जा रही है।",
+      loadingSteps: [
+        "बनावट और घनत्व का विश्लेषण...",
+        "तेल अवशोषण का पता लगाया जा रहा है...",
+        "कार्बोहाइड्रेट अनुपात की पहचान...",
+        "पोषण ऑडिट को अंतिम रूप दिया जा रहा है..."
+      ],
       audit: "Real Meal स्कैन",
       trapsTitle: "NutryScan क्यों?",
       trap1: "ऑयल सोक",
@@ -237,52 +263,68 @@ const App: React.FC = () => {
         )}
 
         {status === AppStatus.LOADING && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-in fade-in duration-700 py-12">
+          <div className="flex flex-col items-center justify-center min-h-[70vh] text-center animate-in fade-in duration-700 py-12">
             
-            <div className="relative w-80 h-80 flex items-center justify-center mb-10">
-              {/* Ambient Glow */}
-              <div className="absolute inset-0 bg-orange-500/10 dark:bg-orange-500/5 rounded-full blur-3xl animate-pulse"></div>
+            {/* 
+               THE BIOMETRIC VISION CORE 
+               Designed for a high-tech "Medical Analysis" feel.
+            */}
+            <div className="relative w-80 h-80 flex items-center justify-center mb-16">
               
-              {/* Outer Rotating Ring */}
-              <div className="absolute w-72 h-72 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-full animate-spin-slow opacity-60"></div>
+              {/* 1. Radar Background Sweep */}
+              <div className="absolute inset-0 rounded-full opacity-20 animate-radar bg-[conic-gradient(from_0deg,transparent_0_300deg,theme(colors.orange.500)_360deg)]"></div>
               
-              {/* Inner Rotating Ring (Reverse) */}
-              <div className="absolute w-56 h-56 border border-slate-300 dark:border-slate-700 rounded-full animate-spin-slow-reverse opacity-60"></div>
-              
-              {/* Ripples */}
-              <div className="absolute w-full h-full flex items-center justify-center">
-                 <div className="absolute w-40 h-40 bg-orange-100/50 dark:bg-orange-900/20 rounded-full animate-ripple"></div>
-                 <div className="absolute w-40 h-40 bg-orange-100/30 dark:bg-orange-900/10 rounded-full animate-ripple" style={{animationDelay: '1s'}}></div>
+              {/* 2. Outer Static Interface Ring */}
+              <div className="absolute inset-0 border border-slate-200 dark:border-slate-800 rounded-full opacity-30 scale-110"></div>
+              <div className="absolute inset-0 border border-dashed border-slate-300 dark:border-slate-700 rounded-full opacity-40 animate-spin-slower"></div>
+
+              {/* 3. The Target Reticles (Corner Brackets) */}
+              <div className="absolute w-64 h-64 pointer-events-none animate-pulse-fast">
+                {/* Top Left */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-500 rounded-tl-xl"></div>
+                {/* Top Right */}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-orange-500 rounded-tr-xl"></div>
+                {/* Bottom Right */}
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-orange-500 rounded-br-xl"></div>
+                {/* Bottom Left */}
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-orange-500 rounded-bl-xl"></div>
               </div>
 
-              {/* Central Scanner Box */}
-              <div className="relative z-10 w-32 h-32 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl shadow-orange-500/10 flex items-center justify-center overflow-hidden border-4 border-slate-50 dark:border-slate-800">
-                 {/* Food Emoji */}
-                 <span className="text-5xl animate-float-cute relative z-10">🍲</span>
+              {/* 4. Central Core Container */}
+              <div className="relative z-10 w-48 h-48 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-orange-500/20 flex items-center justify-center overflow-hidden border-[6px] border-slate-100 dark:border-slate-800">
                  
-                 {/* Scanning Beam */}
-                 <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-orange-400/20 to-transparent animate-scan-vertical z-20"></div>
+                 {/* Food Object */}
+                 <span className="text-7xl animate-float-cute relative z-10 filter drop-shadow-2xl">🍲</span>
                  
-                 {/* Scan Grid Overlay */}
-                 <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:10px_10px] opacity-20 z-0"></div>
+                 {/* 5. The High-Intensity Laser Scan */}
+                 <div className="absolute inset-x-0 h-1 bg-orange-500 shadow-[0_0_20px_rgba(249,115,22,1)] animate-scan-laser z-20"></div>
+                 <div className="absolute inset-x-0 h-16 bg-gradient-to-b from-orange-500/0 via-orange-500/20 to-orange-500/0 animate-scan-laser z-10" style={{animationDelay: '0.1s'}}></div>
+                 
+                 {/* Grid Overlay */}
+                 <div className="absolute inset-0 bg-[linear-gradient(rgba(249,115,22,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.1)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
               </div>
 
-              {/* Orbiting Elements */}
-              <div className="absolute w-full h-full animate-spin-slow" style={{animationDuration: '15s'}}>
-                 <div className="absolute top-10 left-1/2 -translate-x-1/2 w-8 h-8 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center text-xs border border-slate-100 dark:border-slate-700">🔥</div>
+              {/* 6. Orbiting Data Points */}
+              <div className="absolute w-[120%] h-[120%] animate-spin-reverse-slow opacity-60 pointer-events-none">
+                 <div className="absolute top-0 left-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-[0_0_10px_theme(colors.orange.500)]"></div>
+                 <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_theme(colors.blue.500)]"></div>
+                 <div className="absolute top-1/2 right-0 w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_theme(colors.green.500)]"></div>
               </div>
-              <div className="absolute w-full h-full animate-spin-slow-reverse" style={{animationDuration: '18s'}}>
-                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-8 h-8 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center text-xs border border-slate-100 dark:border-slate-700">⚖️</div>
-              </div>
+
             </div>
 
-            <div className="relative z-10 max-w-md mx-auto">
-              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-4">
-                {t.loading}
+            <div className="relative z-10 max-w-lg mx-auto px-4">
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter mb-6">
+                Scanning Plate...
               </h2>
-              <div className="inline-block px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-full">
-                <p className="text-slate-500 dark:text-slate-400 font-bold text-sm tracking-wide">
-                  {t.loadingSub}
+              
+              {/* Dynamic Intelligent Status Bar */}
+              <div className="bg-slate-100 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 p-1 rounded-full inline-flex items-center pr-6">
+                <div className="bg-orange-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full mr-3 animate-pulse">
+                  AI Processing
+                </div>
+                <p className="text-slate-600 dark:text-slate-300 font-bold text-sm md:text-base tracking-wide min-w-[240px] text-left">
+                  {t.loadingSteps[loadingMessageIndex]}
                 </p>
               </div>
             </div>

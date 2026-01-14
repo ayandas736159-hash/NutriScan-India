@@ -38,7 +38,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       ready: "THE TRUTH IS OUT!",
       zeroError: "Your honest meal scan is ready below.",
       btn: "Check Another Meal",
-      rejectionTitle: "⚠️ Common Household Traps", // Updated title
+      rejectionTitle: "Common Household Traps", // Removed ⚠️
       rejections: [
         "Oil Soak: Fried items or oily curries often hide excess fat, hindering weight loss efforts.",
         "Rice Overload: A disproportionate rice-to-protein ratio can lead to energy crashes and sugar spikes.",
@@ -67,7 +67,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       ready: "আসল সত্যিটা দেখুন!",
       zeroError: "আপনার খাবারের Honest Check নিচে দেওয়া হলো।",
       btn: "অন্য খাবার চেক করুন",
-      rejectionTitle: "⚠️ সাধারণ গৃহস্থালীর ভুলগুলো", // Updated title
+      rejectionTitle: "সাধারণ গৃহস্থালীর ভুলগুলো", // Removed ⚠️
       rejections: [
         "তেল সোক: ভাজা বা তৈলাক্ত তরকারিতে প্রায়শই অতিরিক্ত ফ্যাট থাকে, যা ওজন কমাতে বাধা দেয়।",
         "ভাতের আধিক্য: প্রোটিনের তুলনায় ভাতের অসম অনুপাত শক্তি হ্রাস এবং চিনি বৃদ্ধির কারণ হতে পারে।",
@@ -96,7 +96,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       ready: "सच्चाई आपके सामने है!",
       zeroError: "आपका Honest Check नीचे दिया गया है।",
       btn: "दूसरा भोजन चेक करें",
-      rejectionTitle: "⚠️ सामान्य घरेलू गलतियाँ", // Updated title
+      rejectionTitle: "सामान्य घरेलू गलतियाँ", // Removed ⚠️
       rejections: [
         "ऑयल सोक: तले हुए खाद्य पदार्थ या तैलीय करी में अक्सर अतिरिक्त वसा होती है, जो वजन घटाने के प्रयासों में बाधा डालती है।",
         "चावल की अधिकता: प्रोटीन और चावल का असंतुलित अनुपात ऊर्जा में गिरावट और शुगर स्पाइक्स का कारण बन सकता है।",
@@ -115,7 +115,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
       pdfFileNamePrefix: "NutryScan_Honest_Report",
       invalidScan: "अमान्य स्कैन",
       invalidScanSub: "हम इस तस्वीर में किसी भी भोजन का पता नहीं लगा सके। कृपया अपनी थाली या भोजन की स्पष्ट तस्वीर स्कैन करें।",
-      dailyBalance: "दैनिक कैलोरी बैलेंस",
+      dailyBalance: "দৈনিক ক্যালরি ব্যালেন্স",
       target: "दैनिक लक्ष्य",
       remaining: "इस भोजन के बाद शेष",
       personalize: "लक्ष्य निर्धारित करें"
@@ -476,7 +476,7 @@ const NutritionDashboard: React.FC<NutritionDashboardProps> = ({ data, onReset, 
           <p className="text-orange-400 font-black mb-12 max-w-md text-sm uppercase tracking-[0.3em]">{t.nextStep}</p>
           <button onClick={onReset} className="group relative bg-orange-600 hover:bg-orange-500 text-white px-20 py-7 rounded-[3rem] font-black text-xl transition-all transform hover:scale-105 active:scale-95 shadow-2xl shadow-orange-900/60 border-b-8 border-orange-800">
             <span className="relative z-10">{t.btn}</span>
-            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+            <div className="absolute inset-0 bg-white opacity-0 group-hover:btn:opacity-10 transition-opacity"></div>
           </button>
         </div>
       </div>
