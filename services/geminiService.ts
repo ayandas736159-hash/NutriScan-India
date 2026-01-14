@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { NutritionAnalysis, Language } from "../types";
 
@@ -6,10 +7,11 @@ let ai: GoogleGenAI | null = null;
 const getAI = () => {
   if (!ai) {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      console.error("API_KEY is missing. Please check your environment variables.");
+    // Handle Vite's "undefined" stringification or missing env var
+    if (!apiKey || apiKey === "undefined" || apiKey === "") {
+      throw new Error("API Key is missing. Please ensure API_KEY is set in your Vercel Environment Variables and redeploy.");
     }
-    ai = new GoogleGenAI({ apiKey: apiKey as string });
+    ai = new GoogleGenAI({ apiKey: apiKey });
   }
   return ai;
 };
@@ -54,7 +56,7 @@ const ANALYSIS_SCHEMA = {
   required: ["items", "totalCalories", "totalProtein", "totalCarbs", "totalFats", "healthRating", "advice"]
 };
 
-const NUTRITION_CACHE_PREFIX = 'nutryscan_v3_multi_';
+const NUTRITION_CACHE_PREFIX = 'nutryscan_v5_';
 
 async function computeImageHash(base64: string): Promise<string> {
   try {
@@ -92,12 +94,13 @@ function saveToCache(key: string, data: NutritionAnalysis) {
 }
 
 export const analyzeFoodImage = async (base64Image: string, lang: Language): Promise<NutritionAnalysis> => {
-  const model = "gemini-2.5-flash-image"; // Changed model to gemini-2.5-flash-image
+  // Use gemini-3-flash-preview for multimodal analysis and native JSON support
+  const model = "gemini-3-flash-preview"; 
   
   const refusalMessages = {
     en: "Content cannot be analyzed. This image does not contain edible food. NutryScan India only provides analysis for Indian and Bengali meals. Please scan a thali or meal.",
     bn: "বিশ্লেষণ করা সম্ভব নয়। এই ছবিতে কোনও খাবার নেই। NutryScan India শুধুমাত্র ভারতীয় এবং বাঙালি খাবারের বিশ্লেষণ প্রদান করে। আপনার থালি বা খাবারের ছবি স্ক্যান করুন।",
-    hi: "সামগ্রী का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
+    hi: "सामग्री का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाली भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें।"
   };
 
   const imageHash = await computeImageHash(base64Image);
@@ -118,62 +121,46 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
     const aiInstance = getAI();
     const response = await aiInstance.models.generateContent({
       model,
-      contents: {
-        parts: [
-          {
-            text: `You are NutryScan India's Health Companion. 
-            Mission: "Homemade ≠ Low Calorie. Help people see the hidden calories."
-            
-            **URGENT: NON-FOOD DETECTION PROTOCOL**
-            - Examine the image closely. If it contains bedsheets, fabrics, furniture, flooring, body parts (without food), electronics, animals, or ANY non-food household item, you MUST STOP.
-            - Do NOT hallucinate food items. Do NOT assume a pattern on a bedsheet is a dish.
-            - If non-food is detected: 
-              - 'items' MUST be an empty array [].
-              - 'totalCalories', 'totalProtein', 'totalCarbs', 'totalFats', 'healthRating' MUST all be exactly 0.
-              - 'advice' MUST contain a message explaining that no food was found, localized for English, Bengali, and Hindi as follows:
-                en: "Content cannot be analyzed. This image does not contain edible food. NutryScan India only provides analysis for Indian and Bengali meals. Please scan a thali or meal."
-                bn: "বিশ্লেষণ করা সম্ভব নয়। এই ছবিতে কোনও খাবার নেই। NutryScan India শুধুমাত্র ভারতীয় এবং বাঙালি খাবারের বিশ্লেষণ প্রদান করে। আপনার থালি বা খাবারের ছবি স্ক্যান করুন।"
-                hi: "सामग्री का विश्लेषण नहीं किया जाएगा। इस तस्वीर में कोई खाद्य पदार्थ नहीं है। NutryScan India केवल भारतीय और बंगाjali भोजन का विश्लेषण प्रदान करता है। कृपया अपनी थाली या भोजन की तस्वीर स्कैन करें."
-
-            **FOOD ANALYSIS PROTOCOL (ONLY if food is clearly present):**
-            1. Multilingual: Provide 'name', 'portion', 'notes', and 'advice' in 'en', 'bn', and 'hi'.
-            2. The 'Rice' Trap: Audit carbohydrate-heavy Bengali/Indian thalis.
-            3. Invisible Oil: Account for oil soak in Bhaja, Luchi, Paratha, or curries.
-            4. Portions: Estimate based on standard household thali dimensions.
-            
-            Return the JSON data for the nutrition analysis, ensuring it strictly matches the provided schema, and enclose it within a markdown code block like this:
-            \`\`\`json
-            { /* JSON content here */ }
-            \`\`\``
-          },
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Image
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Image
+              }
+            },
+            {
+              text: `You are NutryScan India's Health Companion. 
+              Mission: "Homemade ≠ Low Calorie. Help people see the hidden calories."
+              
+              **URGENT: NON-FOOD DETECTION PROTOCOL**
+              - If the image contains ANY non-food household item (furniture, fabrics, skin with no food, etc.), return 0 items.
+              - Do NOT hallucinate food.
+              
+              **FOOD ANALYSIS PROTOCOL (ONLY if food is clearly present):**
+              1. Provide 'name', 'portion', 'notes', and 'advice' in 'en', 'bn', and 'hi'.
+              2. Audit carbohydrate-heavy Bengali/Indian thalis (Rice/Roti traps).
+              3. Account for oil soak in 'Bhaja', 'Luchi', or curries.
+              4. Estimate portions based on standard household thali dimensions.`
             }
-          }
-        ]
-      },
+          ]
+        }
+      ],
       config: {
-        // responseMimeType and responseSchema are not supported by gemini-2.5-flash-image
-        temperature: 0.0,
+        responseMimeType: "application/json",
+        responseSchema: ANALYSIS_SCHEMA,
+        temperature: 0.1,
       }
     });
 
-    const fullTextResponse = response.text;
-    if (!fullTextResponse) throw new Error("Empty response from AI model.");
+    const jsonStr = response.text;
+    if (!jsonStr) throw new Error("Empty response from AI model.");
     
-    // Extract JSON from markdown code block
-    const jsonMatch = fullTextResponse.match(/```json\n([\s\S]*?)\n```/);
-    if (!jsonMatch || !jsonMatch[1]) {
-      throw new Error("No valid JSON found in AI response.");
-    }
-    const jsonString = jsonMatch[1];
-
     try {
-      const analysisResult = JSON.parse(jsonString) as NutritionAnalysis;
+      const analysisResult = JSON.parse(jsonStr) as NutritionAnalysis;
       
-      // Safety check: force zero if no items or if AI hallucinated values with 0 items
+      // Safety check for non-food or empty detections
       if (!analysisResult.items || analysisResult.items.length === 0) {
           analysisResult.items = [];
           analysisResult.totalCalories = 0;
@@ -181,22 +168,20 @@ export const analyzeFoodImage = async (base64Image: string, lang: Language): Pro
           analysisResult.totalCarbs = 0;
           analysisResult.totalFats = 0;
           analysisResult.healthRating = 0;
-          // Ensure refusal advice is also localized if AI didn't provide it correctly for non-food
-          if (!analysisResult.advice || !analysisResult.advice.en || analysisResult.advice.en.includes("Content cannot be analyzed")) {
-            analysisResult.advice = refusalMessages;
-          }
+          analysisResult.advice = refusalMessages;
       }
 
       saveToCache(cacheKey, analysisResult);
       return analysisResult;
     } catch (parseError) {
-      console.error("JSON Parse Error:", parseError);
+      console.error("JSON Parse Error:", parseError, "Raw Response:", jsonStr);
       throw new Error("Invalid response format from AI. Please try again.");
     }
   } catch (apiError: any) {
-    if (apiError.message && apiError.message.includes("API key")) {
-        throw new Error("System configuration error: Invalid or missing API Key.");
+    console.error("Gemini API Error:", apiError);
+    if (apiError.message && (apiError.message.includes("API key") || apiError.message.includes("API Key"))) {
+        throw new Error("System configuration error: Invalid or missing API Key. Please check Vercel environment variables and REDEPLOY.");
     }
-    throw apiError;
+    throw new Error(apiError.message || "Failed to communicate with AI. Please check your internet connection.");
   }
 };
